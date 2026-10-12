@@ -1,26 +1,2199 @@
 @import "tailwindcss";
 
+/* ==========================================================================
+   Design tokens
+   Dark is the default; [data-theme="light"] swaps the same variables.
+   lib/theme.ts mirrors these values for WebGL and canvas code.
+   ========================================================================== */
+
+:root,
+[data-theme="dark"] {
+  --bg: #161618;
+  --bg-elev: #1e1e21;
+  --text: #f4f2ef;
+  --muted: #8a8790;
+  --violet: #8e80b8;
+  --violet-soft: #8e80b833;
+  --taupe: #a8978a;
+  /* Taupe for small text: same hue, tuned per theme to stay AA-legible. */
+  --taupe-ink: #a8978a;
+  --line: #2a2a2e;
+
+  --glass: rgb(30 30 33 / 0.5);
+  --glass-border: rgb(244 242 239 / 0.1);
+  --glass-hi: rgb(244 242 239 / 0.16);
+  --glass-shadow: rgb(0 0 0 / 0.45);
+
+  color-scheme: dark;
+}
+
+[data-theme="light"] {
+  --bg: #ece8e3;
+  --bg-elev: #f6f3ef;
+  --text: #1a1a1c;
+  --muted: #615d66;
+  --violet: #6e5fa0;
+  --violet-soft: #6e5fa033;
+  --taupe: #8c7a6b;
+  --taupe-ink: #6c5c4f;
+  --line: #d6d0c8;
+
+  --glass: rgb(246 243 239 / 0.55);
+  --glass-border: rgb(26 26 28 / 0.1);
+  --glass-hi: rgb(255 255 255 / 0.75);
+  --glass-shadow: rgb(60 50 40 / 0.18);
+
+  color-scheme: light;
+}
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --gutter: clamp(1.25rem, 4vw, 4rem);
+  --section-pad: clamp(6rem, 15vh, 11rem);
+  --ease-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-inout: cubic-bezier(0.76, 0, 0.24, 1);
+  --grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-bg: var(--bg);
+  --color-elev: var(--bg-elev);
+  --color-ink: var(--text);
+  --color-muted: var(--muted);
+  --color-violet: var(--violet);
+  --color-taupe: var(--taupe);
+  --color-line: var(--line);
+  --font-display: var(--font-dm-mono), ui-monospace, "SFMono-Regular", Menlo, monospace;
+  --font-body: var(--font-fira-code), ui-monospace, "SFMono-Regular", Menlo, monospace;
+  --font-cursive: var(--font-instrument-serif), "Iowan Old Style", Georgia, serif;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+/* ==========================================================================
+   Base
+   ========================================================================== */
+
+@layer base {
+  html {
+    background: var(--bg);
+    -webkit-text-size-adjust: 100%;
+  }
+
+  html.is-loading,
+  html.is-locked {
+    overflow: hidden;
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-body);
+    font-size: 0.95rem;
+    line-height: 1.6;
+    /* Fira Code ligatures on. */
+    font-variant-ligatures: common-ligatures contextual;
+    font-feature-settings: "liga", "calt";
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    overflow-x: clip;
+  }
+
+  ::selection {
+    background: var(--violet);
+    color: var(--bg);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--violet);
+    outline-offset: 4px;
+    border-radius: 4px;
+  }
+
+  ul,
+  ol {
+    list-style: none;
+  }
+
+  /* Nothing may widen the page: on phones that would zoom the whole layout out. */
+  main {
+    overflow-x: clip;
+  }
+
+  /* Lenis */
+  html.lenis,
+  html.lenis body {
+    height: auto;
+  }
+  .lenis.lenis-smooth {
+    scroll-behavior: auto !important;
+  }
+  .lenis.lenis-stopped {
+    overflow: clip;
+  }
+
+  /* Theme switch: the new theme is clipped in as a growing circle (lib/theme.ts). */
+  ::view-transition-old(root),
+  ::view-transition-new(root) {
+    animation: none;
+    mix-blend-mode: normal;
+  }
+  ::view-transition-old(root) {
+    z-index: 1;
+  }
+  ::view-transition-new(root) {
+    z-index: 2;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+/* ==========================================================================
+   Primitives
+   ========================================================================== */
+
+@layer components {
+  .shell {
+    padding-left: var(--gutter);
+    padding-right: var(--gutter);
+  }
+
+  .section {
+    position: relative;
+    padding-bottom: var(--section-pad);
+  }
+
+  .section-head {
+    display: grid;
+    gap: 1rem;
+    padding-top: var(--section-pad);
+    margin-bottom: clamp(3rem, 8vh, 6rem);
+  }
+
+  .display {
+    font-family: var(--font-display);
+    font-weight: 500;
+    letter-spacing: -0.045em;
+    line-height: 0.92;
+  }
+
+  .section-title {
+    font-size: clamp(3rem, 9vw, 9rem);
+  }
+
+  .section-title--xl {
+    font-size: clamp(3.25rem, 12.5vw, 14rem);
+  }
+
+  .eyebrow,
+  .label {
+    font-family: var(--font-body);
+    font-size: 0.72rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--taupe-ink);
+  }
+
+  .label {
+    margin-bottom: 0.8rem;
+  }
+
+  /* The cursive accent: one to three words per section, always taupe. */
+  .cursive {
+    font-family: var(--font-cursive);
+    font-style: italic;
+    font-weight: 400;
+    letter-spacing: 0;
+    color: var(--taupe);
+  }
+
+  .section-title .cursive,
+  .contact-headline .cursive {
+    font-size: 0.36em;
+    line-height: 1;
+  }
+
+  .divider {
+    height: 1px;
+    background: var(--violet);
+    transform-origin: left center;
+  }
+
+  .caret {
+    display: inline-block;
+    width: 0.55em;
+    height: 1.05em;
+    margin-left: 0.15em;
+    vertical-align: text-bottom;
+    background: var(--violet);
+    animation: blink 1s steps(1) infinite;
+  }
+
+  .skip-link {
+    position: fixed;
+    top: 0.75rem;
+    left: 0.75rem;
+    z-index: 10003;
+    padding: 0.6rem 1rem;
+    border-radius: 999px;
+    background: var(--text);
+    color: var(--bg);
+    font-family: var(--font-display);
+    font-size: 0.8rem;
+    transform: translateY(-200%);
+  }
+  .skip-link:focus-visible {
+    transform: none;
+  }
+
+  /* ---- Liquid text (outline → flooded fill) ----------------------------- */
+
+  .lt {
+    position: relative;
+    display: inline-block;
+    white-space: nowrap;
+  }
+
+  /* `color` stays opaque so contrast tooling sees real ink; the fill is what's transparent. */
+  .lt-outline {
+    color: var(--text);
+    -webkit-text-fill-color: transparent;
+    -webkit-text-stroke: var(--stroke, 1px) var(--text);
+  }
+
+  .lt-wrap {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+  }
+
+  .lt-fill {
+    --r: 0px;
+    --x: 50%;
+    --y: 50%;
+    display: block;
+    color: var(--text);
+    clip-path: circle(var(--r) at var(--x) var(--y));
+  }
+
+  /* ---- Liquid glass ------------------------------------------------------ */
+
+  .liquid-glass {
+    --mx: 50%;
+    --my: 0%;
+    --glow: 0;
+    position: relative;
+    isolation: isolate;
+    background: var(--glass);
+    border: 1px solid var(--glass-border);
+    -webkit-backdrop-filter: blur(14px) saturate(140%);
+    backdrop-filter: blur(14px) saturate(140%);
+    box-shadow:
+      inset 0 1px 0 var(--glass-hi),
+      inset 0 -1px 0 rgb(0 0 0 / 0.12),
+      0 24px 60px -32px var(--glass-shadow);
+  }
+
+  /* Specular highlight that follows the cursor (GlassFilters.tsx sets --mx/--my). */
+  .liquid-glass::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    border-radius: inherit;
+    background: radial-gradient(
+      260px circle at var(--mx) var(--my),
+      var(--glass-hi),
+      transparent 65%
+    );
+    opacity: calc(0.35 + var(--glow) * 0.65);
+    transition: opacity 0.5s ease;
+    pointer-events: none;
+  }
+
+  /* Real refraction where the engine supports SVG filters in backdrop-filter. */
+  html.refract .liquid-glass--refract {
+    -webkit-backdrop-filter: url(#lg-refract) blur(14px) saturate(140%);
+    backdrop-filter: url(#lg-refract) blur(14px) saturate(140%);
+  }
+
+  /* ---- Buttons, pills, links -------------------------------------------- */
+
+  .magnetic {
+    display: inline-flex;
+    will-change: transform;
+  }
+
+  .magnetic-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6em;
+    pointer-events: none;
+  }
+
+  .btn {
+    position: relative;
+    isolation: isolate;
+    align-items: center;
+    overflow: hidden;
+    padding: 1em 1.7em;
+    border: 1px solid var(--muted);
+    border-radius: 999px;
+    font-family: var(--font-display);
+    font-size: 0.76rem;
+    font-weight: 500;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--text);
+    transition:
+      color 0.45s var(--ease-inout),
+      border-color 0.45s var(--ease-inout);
+  }
+
+  .btn::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    border-radius: inherit;
+    background: var(--text);
+    transform: translateY(102%);
+    transition: transform 0.55s var(--ease-inout);
+  }
+
+  .btn:hover,
+  .btn:focus-visible {
+    color: var(--bg);
+    border-color: var(--text);
+  }
+  .btn:hover::before,
+  .btn:focus-visible::before {
+    transform: none;
+  }
+
+  .btn--solid {
+    background: var(--violet);
+    border-color: var(--violet);
+    color: var(--bg);
+  }
+
+  .pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.45rem;
+  }
+
+  .pill {
+    padding: 0.32rem 0.75rem;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    font-size: 0.72rem;
+    line-height: 1.4;
+    color: var(--text);
+    white-space: nowrap;
+    transition: border-color 0.3s ease;
+  }
+  .pill:hover {
+    border-color: var(--violet);
+  }
+
+  .text-link {
+    align-items: center;
+    padding: 0.35rem 0;
+    font-family: var(--font-display);
+    font-size: 1rem;
+    color: var(--text);
+    transition: color 0.3s ease;
+  }
+  .text-link:hover {
+    color: var(--violet);
+  }
+
+  /* ---- Canvases ---------------------------------------------------------- */
+
+  .canvas-shell canvas {
+    display: block;
+  }
+
+  /* ==========================================================================
+     Global chrome: cursor, trail, grain, loader, navigation
+     ========================================================================== */
+
+  html.has-cursor,
+  html.has-cursor * {
+    cursor: none !important;
+  }
+
+  .cursor-dot,
+  .cursor-ring {
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 10002;
+    pointer-events: none;
+    visibility: hidden;
+    will-change: transform;
+  }
+
+  .cursor-dot {
+    width: 6px;
+    height: 6px;
+    margin: -3px 0 0 -3px;
+    border-radius: 50%;
+    background: var(--text);
+  }
+
+  .cursor-ring {
+    display: grid;
+    place-items: center;
+    width: 36px;
+    height: 36px;
+    margin: -18px 0 0 -18px;
+    border: 1px solid var(--violet);
+    border-radius: 999px;
+    transition:
+      width 0.4s var(--ease-expo),
+      height 0.4s var(--ease-expo),
+      margin 0.4s var(--ease-expo),
+      background-color 0.3s ease,
+      border-color 0.3s ease;
+  }
+
+  .cursor-ring[data-state="link"] {
+    background: #fff;
+    border-color: #fff;
+    mix-blend-mode: difference;
+  }
+
+  .cursor-ring[data-state="view"],
+  .cursor-ring[data-state="drag"] {
+    width: 96px;
+    height: 40px;
+    margin: -20px 0 0 -48px;
+    background: var(--violet);
+    border-color: var(--violet);
+  }
+
+  .cursor-label {
+    font-family: var(--font-display);
+    font-size: 0.68rem;
+    font-weight: 500;
+    letter-spacing: 0.14em;
+    white-space: nowrap;
+    color: var(--bg);
+    opacity: 0;
+    transition: opacity 0.2s ease;
+  }
+
+  .cursor-ring[data-state="view"] .cursor-label,
+  .cursor-ring[data-state="drag"] .cursor-label {
+    opacity: 1;
+    transition-delay: 0.12s;
+  }
+
+  .cursor-trail {
+    position: fixed;
+    inset: 0;
+    z-index: 10001;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+  }
+
+  .grain {
+    position: fixed;
+    inset: -120px;
+    z-index: 10004;
+    pointer-events: none;
+    opacity: 0.07;
+    mix-blend-mode: overlay;
+    background-image: var(--grain);
+    background-size: 240px 240px;
+    animation: grain 1s steps(1) infinite;
+  }
+
+  /* ---- Loader ------------------------------------------------------------ */
+
+  .loader {
+    position: fixed;
+    inset: 0;
+    z-index: 10000;
+    background: #161618;
+    color: #f4f2ef;
+    clip-path: inset(0% 0% 0% 0%);
+  }
+
+  .loader-inner {
+    display: grid;
+    grid-template-rows: auto 1fr auto;
+    height: 100%;
+    padding: clamp(1.25rem, 4vw, 3rem);
+  }
+
+  .loader-mark {
+    font-family: var(--font-display);
+    font-size: 1.05rem;
+    font-weight: 500;
+    letter-spacing: -0.04em;
+  }
+
+  .loader-terminal {
+    display: grid;
+    gap: 0.5rem;
+    align-self: center;
+    font-size: clamp(0.8rem, 1.4vw, 1rem);
+    color: #8a8790;
+  }
+
+  .loader-terminal .caret {
+    background: #8e80b8;
+  }
+
+  .loader-success {
+    color: #8e80b8;
+    visibility: hidden;
+    opacity: 0;
+    transform: translateY(6px);
+  }
+
+  .loader-counter {
+    justify-self: end;
+    font-family: var(--font-display);
+    font-size: clamp(5rem, 22vw, 20rem);
+    font-weight: 300;
+    line-height: 0.8;
+    letter-spacing: -0.06em;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* ==========================================================================
+     01 — Hero
+     ========================================================================== */
+
+  .hero {
+    position: relative;
+    display: flex;
+    align-items: center;
+    height: 100svh;
+    min-height: 34rem;
+    overflow: clip;
+    background: var(--bg);
+  }
+
+  /* Everything in the hero sits in here, so it can step back as one piece. */
+  .hero-inner {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    transform-origin: 50% 50%;
+    will-change: transform;
+  }
+
+  .hero-stage {
+    position: absolute;
+    inset: 0;
+  }
+
+  .hero-canvas {
+    position: absolute;
+    inset: 0;
+    /* Dissolve into the page so the canvas has no visible bottom edge. */
+    -webkit-mask-image: linear-gradient(to bottom, #000 78%, transparent);
+    mask-image: linear-gradient(to bottom, #000 78%, transparent);
+  }
+
+  .hero-content {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    gap: clamp(0.9rem, 2.4vh, 1.75rem);
+    width: 100%;
+  }
+
+  .hero-name {
+    --stroke: 1.5px;
+    display: flex;
+    flex-wrap: wrap;
+    column-gap: 0.55ch;
+    font-size: clamp(3.4rem, 13.1vw, 15.5rem);
+  }
+
+  .hero-meta {
+    display: grid;
+    gap: clamp(0.75rem, 2vh, 1.4rem);
+    justify-items: start;
+  }
+
+  .hero-tag {
+    font-size: clamp(0.78rem, 1.25vw, 1.05rem);
+    white-space: pre-wrap;
+  }
+
+  /* Offset parent for the caret while it is being positioned by typeTag(). */
+  .hero-tag-visual {
+    position: relative;
+    display: block;
+  }
+
+  .tag-punct {
+    color: var(--muted);
+  }
+  .tag-name {
+    color: var(--violet);
+  }
+  .tag-attr {
+    color: var(--text);
+  }
+  .tag-string {
+    color: var(--taupe-ink);
+  }
+
+  .hero-tagline {
+    font-size: clamp(1.7rem, 3.3vw, 3.1rem);
+    line-height: 1.1;
+  }
+
+  .hero-cta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.9rem;
+    margin-top: 0.4rem;
+  }
+
+  .hero-scroll {
+    position: absolute;
+    left: calc(var(--gutter) + 3.75rem);
+    bottom: 2rem;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    gap: 0.9rem;
+    font-size: 0.68rem;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .hero-scroll-line {
+    position: relative;
+    width: 64px;
+    height: 1px;
+    overflow: hidden;
+    background: var(--line);
+  }
+
+  .hero-scroll-line::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: var(--violet);
+    animation: scroll-line 2.4s var(--ease-inout) infinite;
+  }
+
+  @media (max-width: 767px) {
+    .hero-canvas {
+      opacity: 0.55;
+    }
+    .hero-name {
+      --stroke: 1px;
+      flex-direction: column;
+      font-size: 25vw;
+    }
+  }
+
+  /* ==========================================================================
+     02 — About
+     ========================================================================== */
+
+  .about-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+    align-items: center;
+    gap: clamp(2rem, 5vw, 5rem);
+  }
+
+  .about {
+    overflow: clip;
+  }
+
+  .about-text {
+    position: relative;
+    z-index: 1;
+    font-family: var(--font-display);
+    font-size: clamp(1.5rem, 3.2vw, 3.3rem);
+    line-height: 1.24;
+    letter-spacing: -0.035em;
+  }
+
+  /* --w is scrubbed 0 → 1 by ScrollTrigger: muted ink warming up to full ink. */
+  .word {
+    --w: 0;
+    color: color-mix(in srgb, var(--text) calc(var(--w) * 100%), var(--muted));
+  }
+
+  .word.cursive {
+    font-size: 1.14em;
+    color: color-mix(in srgb, var(--taupe) calc(var(--w) * 100%), var(--muted));
+  }
+
+  .capsule {
+    position: relative;
+    display: inline-block;
+    width: 1.95em;
+    height: 0.84em;
+    margin-inline: 0.08em;
+    overflow: hidden;
+    vertical-align: -0.07em;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    background: var(--bg-elev);
+    transition: transform 0.6s var(--ease-expo);
+  }
+  .capsule:hover {
+    transform: scale(1.14);
+  }
+
+  .about-portrait {
+    position: relative;
+    width: 100%;
+    max-height: 78vh;
+    aspect-ratio: 9 / 10;
+  }
+
+  /* The particle field is far larger than its column: the face fills the
+     frame and the feathered rim and orbiting dust spill out around it. It
+     ignores the pointer so the text it overlaps stays selectable. */
+  .portrait-canvas {
+    position: absolute;
+    inset: -55% -70%;
+    pointer-events: none;
+    /* Feather the canvas itself, so stray particles never end on a straight edge. */
+    -webkit-mask-image: radial-gradient(ellipse 50% 50% at 50% 46%, #000 52%, transparent 96%);
+    mask-image: radial-gradient(ellipse 50% 50% at 50% 46%, #000 52%, transparent 96%);
+  }
+
+  /* Copy always sits above the particle field. */
+  .about .section-head,
+  .about .stats {
+    position: relative;
+    z-index: 1;
+  }
+
+  .portrait-fallback {
+    position: absolute;
+    inset: 4% 14%;
+    overflow: hidden;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+  }
+  .portrait-fallback:hover {
+    filter: url(#ripple);
+  }
+
+  .stats {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 1.5rem;
+    margin-top: clamp(4rem, 10vh, 7rem);
+    padding-top: 2rem;
+    border-top: 1px solid var(--line);
+  }
+
+  .stat-value {
+    display: block;
+    font-family: var(--font-display);
+    font-size: clamp(2rem, 4.6vw, 4.2rem);
+    font-weight: 500;
+    line-height: 1;
+    letter-spacing: -0.04em;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .stat-label {
+    display: block;
+    margin-top: 0.6rem;
+    font-size: 0.72rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  @media (max-width: 767px) {
+    .about-grid {
+      grid-template-columns: minmax(0, 1fr);
+    }
+    .about-portrait {
+      max-width: 22rem;
+      margin-inline: auto;
+    }
+    .stats {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      row-gap: 2.25rem;
+    }
+  }
+
+  /* ==========================================================================
+     03 — Experience stage (pinned horizontal scroll, then the flip)
+     ========================================================================== */
+
+  .stage {
+    position: relative;
+    height: 100svh;
+    overflow: hidden;
+    perspective: 1200px;
+    background: var(--bg);
+  }
+
+  .stage-over {
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    overflow: hidden;
+    background: var(--bg);
+    backface-visibility: hidden;
+    transform-origin: 50% 50%;
+    will-change: transform;
+  }
+
+  .stage-over.is-dragging {
+    user-select: none;
+  }
+
+  .stage-under {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+  }
+
+  .stage-under .shell {
+    display: grid;
+    gap: 1.25rem;
+    width: 100%;
+  }
+
+  .xp-backdrop {
+    position: absolute;
+    top: 50%;
+    left: 0;
+    z-index: 0;
+    font-size: 36vh;
+    white-space: nowrap;
+    color: var(--muted);
+    -webkit-text-fill-color: transparent;
+    -webkit-text-stroke: 1px color-mix(in srgb, var(--muted) 38%, transparent);
+    translate: 0 -50%;
+    pointer-events: none;
+  }
+
+  .xp-track {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    align-items: stretch;
+    gap: clamp(2rem, 5vw, 6rem);
+    width: max-content;
+    height: min(72vh, 42rem);
+    padding-left: var(--gutter);
+    padding-right: 14vw;
+    will-change: transform;
+  }
+
+  .xp-intro {
+    display: flex;
+    flex: none;
+    flex-direction: column;
+    justify-content: center;
+    gap: 1.2rem;
+    width: min(44vw, 38rem);
+  }
+
+  .xp-hint {
+    font-size: 0.72rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  .xp-hint-lite {
+    display: none;
+  }
+
+  .xp-panel {
+    display: grid;
+    flex: none;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr);
+    grid-template-rows: 1fr auto;
+    gap: 1.5rem clamp(1.5rem, 3vw, 3.5rem);
+    width: min(76vw, 66rem);
+    padding: clamp(1.75rem, 3.2vw, 3.25rem);
+    overflow: hidden;
+    border-radius: 28px;
+  }
+
+  .xp-node {
+    position: absolute;
+    top: 1.25rem;
+    right: 1.25rem;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--violet);
+    box-shadow: 0 0 0 5px var(--violet-soft);
+  }
+
+  .xp-panel-head {
+    grid-column: 1;
+    grid-row: 1;
+  }
+
+  .xp-company {
+    margin: 0.9rem 0 0.8rem;
+    font-size: clamp(2.6rem, 6.2vw, 6.4rem);
+  }
+
+  .xp-role {
+    font-family: var(--font-display);
+    font-size: 0.95rem;
+    color: var(--muted);
+  }
+
+  .xp-points {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    grid-column: 2;
+    grid-row: 1 / span 2;
+    gap: 0.85rem;
+    align-content: center;
+    font-size: clamp(0.8rem, 1.05vw, 0.95rem);
+    line-height: 1.55;
+  }
+
+  .xp-points li {
+    position: relative;
+    padding-left: 1.6em;
+  }
+
+  .xp-points li::before {
+    content: "";
+    position: absolute;
+    top: 0.75em;
+    left: 0;
+    width: 0.9em;
+    height: 1px;
+    background: var(--violet);
+  }
+
+  .xp-stack {
+    grid-column: 1;
+    grid-row: 2;
+    align-self: end;
+  }
+
+  .xp-index {
+    position: absolute;
+    right: 0.1em;
+    bottom: -0.16em;
+    z-index: 0;
+    font-size: clamp(6rem, 13vw, 13rem);
+    color: var(--violet);
+    -webkit-text-fill-color: transparent;
+    -webkit-text-stroke: 1px color-mix(in srgb, var(--violet) 45%, transparent);
+    pointer-events: none;
+  }
+
+  /* Runs behind the panels, so the glass blurs it as it passes through. */
+  .xp-line {
+    position: absolute;
+    top: 50%;
+    right: 0;
+    left: 0;
+    z-index: -1;
+    height: 1px;
+    background: var(--violet);
+    transform-origin: left center;
+  }
+
+  /* Fallback (matches MQ.stacked in lib/gsap.ts): no pin, panels stack vertically. */
+  @media (max-width: 359px), (prefers-reduced-motion: reduce) {
+    .stage {
+      height: auto;
+      overflow: visible;
+      perspective: none;
+    }
+
+    .stage-over {
+      position: relative;
+      inset: auto;
+      display: block;
+      padding-top: var(--section-pad);
+      overflow: visible;
+      backface-visibility: visible;
+    }
+
+    .stage-under {
+      position: relative;
+      inset: auto;
+      padding-top: var(--section-pad);
+      padding-bottom: 3rem;
+    }
+
+    .xp-backdrop {
+      display: none;
+    }
+
+    .xp-track {
+      flex-direction: column;
+      width: auto;
+      height: auto;
+      max-height: none;
+      gap: 1.25rem;
+      padding: 0 var(--gutter) 2.5rem var(--gutter);
+    }
+
+    .xp-intro {
+      width: auto;
+      margin-bottom: 1.5rem;
+    }
+
+    .xp-panel {
+      width: auto;
+    }
+
+    .xp-panel-head,
+    .xp-points,
+    .xp-stack {
+      grid-column: 1;
+      grid-row: auto;
+    }
+
+    .xp-line {
+      top: auto;
+      bottom: 1rem;
+      left: var(--gutter);
+      right: var(--gutter);
+      z-index: 0;
+    }
+
+    .xp-hint {
+      display: none;
+    }
+  }
+
+  /* ==========================================================================
+     04 — Projects
+     ========================================================================== */
+
+  .projects {
+    position: relative;
+    z-index: 1;
+    background: var(--bg);
+  }
+
+  .projects-inner {
+    padding-block: clamp(4rem, 10vh, 7rem) clamp(7rem, 20vh, 12rem);
+    overflow: hidden;
+    border-radius: 32px;
+    background: var(--bg-elev);
+    will-change: transform;
+  }
+
+  .projects-list {
+    display: grid;
+    gap: clamp(7rem, 18vh, 12rem);
+  }
+
+  .project-card {
+    display: grid;
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    align-items: end;
+  }
+
+  .project-media {
+    position: relative;
+    display: block;
+    grid-column: 1 / span 9;
+    grid-row: 1;
+    overflow: hidden;
+    aspect-ratio: 16 / 10;
+    border-radius: 28px;
+    background: var(--bg);
+  }
+
+  /* Taller than its frame so it can drift (parallax) without showing an edge. */
+  .project-media-inner {
+    position: absolute;
+    inset: -7% 0;
+    display: block;
+  }
+
+  .project-canvas {
+    position: absolute;
+    inset: 0;
+  }
+
+  .project-info {
+    z-index: 2;
+    display: grid;
+    grid-column: 7 / span 6;
+    grid-row: 1;
+    gap: 1rem;
+    justify-items: start;
+    margin-bottom: -3.5rem;
+    padding: clamp(1.25rem, 2.4vw, 2.25rem);
+    border-radius: 24px;
+  }
+
+  .project-card[data-flip="true"] .project-media {
+    grid-column: 4 / span 9;
+  }
+  .project-card[data-flip="true"] .project-info {
+    grid-column: 1 / span 6;
+  }
+
+  .project-name {
+    font-size: clamp(1.9rem, 4.2vw, 4.2rem);
+  }
+
+  .project-summary {
+    font-size: clamp(0.82rem, 1.05vw, 0.95rem);
+    line-height: 1.65;
+  }
+
+  @media (max-width: 767px) {
+    .project-card {
+      grid-template-columns: minmax(0, 1fr);
+    }
+    .project-media,
+    .project-info,
+    .project-card[data-flip="true"] .project-media,
+    .project-card[data-flip="true"] .project-info {
+      grid-column: 1;
+      grid-row: auto;
+    }
+    .project-info {
+      margin: -2.5rem 0.75rem 0;
+    }
+    .projects-inner {
+      border-radius: 24px;
+    }
+  }
+
+  /* ==========================================================================
+     05 — Stack
+     ========================================================================== */
+
+
+  .marquee {
+    display: grid;
+    gap: 0.25rem;
+    margin-bottom: clamp(4rem, 10vh, 7rem);
+    padding-block: 0.5rem;
+    overflow: hidden;
+  }
+
+  .marquee-row,
+  .marquee-track {
+    will-change: transform;
+  }
+
+  .marquee-track {
+    display: flex;
+    width: max-content;
+  }
+
+  .marquee-copy {
+    display: flex;
+    flex: none;
+  }
+
+  .marquee-item {
+    display: flex;
+    align-items: center;
+    font-size: clamp(28px, 4.5vw, 64px);
+    line-height: 1.25;
+    white-space: nowrap;
+  }
+
+  .marquee-sep {
+    margin-inline: 0.55em;
+    font-size: 0.42em;
+    color: var(--violet);
+  }
+
+  /* `// frontend + backend`: a small Fira Code tag at the head of each row. */
+  .marquee-label {
+    display: flex;
+    align-items: center;
+    margin-right: 1.6em;
+    font-family: var(--font-body);
+    font-size: 0.72rem;
+    letter-spacing: 0.08em;
+    white-space: nowrap;
+    color: var(--taupe-ink);
+  }
+
+  .stack-body {
+    display: grid;
+    grid-template-columns: minmax(0, 1.7fr) minmax(0, 1fr);
+    align-items: center;
+    gap: clamp(2rem, 5vw, 5rem);
+  }
+
+  .stack-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    column-gap: 2rem;
+    border-top: 1px solid var(--line);
+  }
+
+  .stack-group {
+    padding: 1.6rem 0 1.8rem;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .stack-group-title {
+    margin-bottom: 1rem;
+    font-family: var(--font-display);
+    font-size: 0.8rem;
+    font-weight: 500;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--taupe-ink);
+    transition: color 0.3s ease;
+  }
+  .stack-group:hover .stack-group-title {
+    color: var(--violet);
+  }
+
+  .stack-cube {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 1;
+  }
+
+  .tesseract {
+    position: absolute;
+    inset: 0;
+  }
+
+  /* Smaller than its frame, so the corners stay free for the annotations. */
+  .tesseract-canvas {
+    position: absolute;
+    inset: 12%;
+  }
+
+  .tesseract {
+    touch-action: none;
+  }
+
+  @media (max-width: 767px) {
+    .stack-body,
+    .stack-grid {
+      grid-template-columns: minmax(0, 1fr);
+    }
+    .stack-cube {
+      max-width: 26rem;
+      margin-inline: auto;
+    }
+  }
+
+  /* ==========================================================================
+     06 — Contact + footer
+     ========================================================================== */
+
+  .contact .eyebrow {
+    padding-top: var(--section-pad);
+  }
+
+  .contact-headline {
+    --stroke: 1.5px;
+    margin: 1.25rem 0 clamp(3rem, 8vh, 6rem);
+    font-size: clamp(2.6rem, 11.6vw, 13.5rem);
+  }
+
+  .contact-line {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0 0.18em;
+  }
+
+  .contact-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr) minmax(0, 1fr);
+    gap: 2.5rem;
+    padding-top: 2.5rem;
+    border-top: 1px solid var(--line);
+  }
+
+  .contact-block {
+    display: grid;
+    align-content: start;
+    justify-items: start;
+  }
+
+  .email-link {
+    padding-bottom: 0.25em;
+    border-bottom: 1px solid var(--violet);
+    font-family: var(--font-display);
+    font-size: clamp(1.05rem, 2.3vw, 1.9rem);
+    letter-spacing: -0.03em;
+    color: var(--text);
+  }
+
+  .contact-links {
+    display: grid;
+    gap: 0.2rem;
+    justify-items: start;
+  }
+
+  .education {
+    max-width: 22ch;
+    font-family: var(--font-display);
+    font-size: 1rem;
+    line-height: 1.5;
+  }
+
+
+  .footer {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem 2rem;
+    padding-block: 2rem;
+    padding-left: max(var(--gutter), 5.25rem);
+    border-top: 1px solid var(--line);
+    font-size: 0.75rem;
+    color: var(--muted);
+  }
+
+  .footer-clock {
+    display: flex;
+    align-items: baseline;
+    gap: 0.7em;
+  }
+
+  .footer-clock .label {
+    margin: 0;
+  }
+
+  .footer-clock time {
+    color: var(--text);
+    font-variant-numeric: tabular-nums;
+  }
+
+  @media (max-width: 767px) {
+    .contact-grid {
+      grid-template-columns: minmax(0, 1fr);
+    }
+    .footer {
+      padding-bottom: 9.5rem;
+    }
+  }
+}
+
+/* ==========================================================================
+   Keyframes
+   ========================================================================== */
+
+@keyframes blink {
+  50% {
+    opacity: 0;
+  }
+}
+
+@keyframes scroll-line {
+  0% {
+    transform: translateX(-101%);
+  }
+  55%,
+  100% {
+    transform: translateX(101%);
+  }
+}
+
+/* Ten hard steps a second: the jitter of film, not a smooth drift. */
+@keyframes grain {
+  0% { transform: translate(0, 0); }
+  10% { transform: translate(-48px, 30px); }
+  20% { transform: translate(36px, -62px); }
+  30% { transform: translate(-70px, -20px); }
+  40% { transform: translate(58px, 44px); }
+  50% { transform: translate(-22px, 74px); }
+  60% { transform: translate(80px, -36px); }
+  70% { transform: translate(-60px, 52px); }
+  80% { transform: translate(24px, -80px); }
+  90% { transform: translate(-84px, 12px); }
+}
+
+/* ==========================================================================
+   Reduced motion: everything is already readable without animation.
+   ========================================================================== */
+
+@media (prefers-reduced-motion: reduce) {
+  .grain,
+  .caret,
+  .hero-scroll-line::after,
+  .quote.is-on .flag {
+    animation: none;
+  }
+
+  .word {
+    --w: 1;
+  }
+
+  .capsule,
+  .btn,
+  .btn::before,
+  .theme-switch {
+    transition: none;
+  }
+}
+
+/* ==========================================================================
+   Revision: card-over pattern, menu drawer, page transitions, /projects
+   ========================================================================== */
+
+@layer components {
+  /* A section that slides up over the pinned one before it (About over Hero,
+     Stack over Projects): raised surface, rounded shoulders, hairline, shadow. */
+  .card-over {
+    position: relative;
+    z-index: 2;
+    border: 1px solid var(--line);
+    border-bottom: 0;
+    border-radius: 32px 32px 0 0;
+    background: var(--bg-elev);
+    box-shadow: 0 -32px 80px -36px rgb(0 0 0 / 0.55);
+    will-change: transform;
+  }
+
+  /* ---- Menu button + drawer ---------------------------------------------- */
+
+  .menu-btn {
+    position: fixed;
+    top: 1.1rem;
+    right: 1.25rem;
+    z-index: 90;
+    padding: 0.7rem 1.1rem;
+    border-radius: 999px;
+    font-family: var(--font-display);
+    font-size: 0.72rem;
+    font-weight: 500;
+    letter-spacing: 0.18em;
+    color: var(--text);
+  }
+
+  .menu-btn .magnetic-label {
+    gap: 0.8rem;
+  }
+
+  .menu-btn-label {
+    min-width: 5ch;
+  }
+
+  .menu-btn-icon {
+    display: grid;
+    gap: 5px;
+  }
+
+  .menu-btn-icon span {
+    display: block;
+    width: 18px;
+    height: 1.5px;
+    background: currentColor;
+    transition: transform 0.55s var(--ease-inout);
+  }
+
+  /* Two lines fold into an ✕. */
+  .menu-btn[data-open="true"] .menu-btn-icon span:first-child {
+    transform: translateY(3.25px) rotate(45deg);
+  }
+  .menu-btn[data-open="true"] .menu-btn-icon span:last-child {
+    transform: translateY(-3.25px) rotate(-45deg);
+  }
+
+  /* The sheet is revealed by a clip whose two bottom corners (--l, --r) are
+     animated on different beats, so it comes down with a slanted edge. */
+  .menu {
+    --l: 0%;
+    --r: 0%;
+    position: fixed;
+    inset: 0 0 auto;
+    z-index: 80;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    min-height: 70vh;
+    max-height: 100svh;
+    padding: 6rem 0 2rem;
+    overflow-y: auto;
+    visibility: hidden;
+    border-width: 0 0 1px;
+    border-radius: 0 0 32px 32px;
+    background: color-mix(in srgb, var(--bg) 72%, transparent);
+    clip-path: polygon(0 0, 100% 0, 100% var(--r), 0 var(--l));
+  }
+
+  .menu-nav ol {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0 3rem;
+  }
+
+  .menu-item {
+    overflow: hidden;
+  }
+
+  .menu-link {
+    display: inline-block;
+    padding: 0.08em 0;
+    font-size: clamp(2rem, 7.4vh, 5.2rem);
+    line-height: 1.12;
+    color: var(--text);
+  }
+
+  .menu-link-inner {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 1rem;
+  }
+
+  .menu-index {
+    font-family: var(--font-body);
+    font-size: 0.7rem;
+    font-weight: 400;
+    letter-spacing: 0.2em;
+    color: var(--taupe-ink);
+  }
+
+  .menu-foot {
+    margin-top: 2.5rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--line);
+  }
+
+  .menu-email {
+    font-size: clamp(1rem, 1.6vw, 1.35rem);
+  }
+
+  @media (max-width: 767px) {
+    .menu-nav ol {
+      grid-template-columns: minmax(0, 1fr);
+    }
+    .menu-link {
+      font-size: clamp(1.9rem, 6.2vh, 3rem);
+    }
+    .menu {
+      min-height: 100svh;
+    }
+  }
+
+  /* ---- Page transitions --------------------------------------------------- */
+
+  .transition {
+    position: fixed;
+    inset: 0;
+    z-index: 9000;
+    pointer-events: none;
+  }
+
+  .transition-iris,
+  .transition-panel,
+  .transition-grid {
+    position: absolute;
+    inset: 0;
+    visibility: hidden;
+  }
+
+  .transition-iris {
+    background: var(--violet);
+  }
+
+  .transition-panel {
+    background: var(--bg-elev);
+  }
+
+  /* Its own, heavier grain, so the wipe reads as a textured sheet. */
+  .transition-panel::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background-image: var(--grain);
+    background-size: 240px 240px;
+    opacity: 0.22;
+    mix-blend-mode: overlay;
+  }
+
+  .transition-grid {
+    display: grid;
+    grid-template-columns: repeat(12, 1fr);
+    grid-template-rows: repeat(8, 1fr);
+    perspective: 1400px;
+  }
+
+  .transition-tile {
+    display: grid;
+    place-items: center;
+    /* A hair of overlap so no seams show while the wall is closed. */
+    margin: -0.5px;
+    background: var(--bg-elev);
+    box-shadow: inset 0 0 0 0.5px var(--line);
+    backface-visibility: hidden;
+    font-family: var(--font-display);
+    font-size: clamp(0.8rem, 2vw, 1.6rem);
+    color: var(--violet);
+  }
+
+  /* ---- Work: phone tuning for the pinned horizontal scroll ---------------- */
+
+  .xp-hint-lite {
+    display: none;
+  }
+
+  @media (hover: none), (pointer: coarse) {
+    .xp-hint-full {
+      display: none;
+    }
+    .xp-hint-lite {
+      display: inline;
+    }
+  }
+
+  @media (min-width: 360px) and (max-width: 767px) and (prefers-reduced-motion: no-preference) {
+    .xp-track {
+      gap: 4vw;
+      height: auto;
+      max-height: calc(100svh - 7.5rem);
+      padding-right: 6vw;
+    }
+
+    .xp-intro {
+      width: 70vw;
+    }
+
+    /* 88vw: the next panel always peeks in from the right. */
+    .xp-panel {
+      grid-template-columns: minmax(0, 1fr);
+      grid-template-rows: auto;
+      align-content: start;
+      gap: 0.9rem;
+      width: 88vw;
+      padding: 1.25rem 1.25rem 1.4rem;
+      border-radius: 22px;
+    }
+
+    .xp-panel-head,
+    .xp-points,
+    .xp-stack {
+      grid-column: 1;
+      grid-row: auto;
+    }
+
+    .xp-company {
+      margin: 0.5rem 0 0.4rem;
+      font-size: clamp(2rem, 11vw, 3rem);
+    }
+
+    .xp-role {
+      font-size: 0.82rem;
+    }
+
+    .xp-points {
+      gap: 0.5rem;
+      font-size: 0.76rem;
+      line-height: 1.45;
+    }
+
+    .xp-index {
+      display: none;
+    }
+
+    .xp-backdrop {
+      font-size: 20vh;
+    }
+  }
+
+  /* ---- Project card additions --------------------------------------------- */
+
+  .project-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.6rem;
+  }
+
+  .contributors {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem 1rem;
+  }
+
+  .contributors .label {
+    margin: 0;
+  }
+
+  .contributor {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.55rem;
+    font-size: 0.8rem;
+    color: var(--text);
+  }
+
+  .contributor-avatar {
+    position: relative;
+    display: grid;
+    place-items: center;
+    width: 30px;
+    height: 30px;
+    overflow: hidden;
+    border-radius: 50%;
+    background: var(--bg);
+    box-shadow: 0 0 0 1px var(--violet);
+    font-family: var(--font-display);
+    font-size: 0.6rem;
+    color: var(--muted);
+    transition: transform 0.4s var(--ease-expo);
+  }
+
+  a.contributor:hover .contributor-avatar,
+  a.contributor:focus-visible .contributor-avatar {
+    transform: scale(1.12);
+  }
+
+  .contributor-tip {
+    position: absolute;
+    bottom: calc(100% + 8px);
+    left: 0;
+    padding: 0.3rem 0.6rem;
+    border-radius: 999px;
+    background: var(--text);
+    color: var(--bg);
+    font-size: 0.68rem;
+    white-space: nowrap;
+    opacity: 0;
+    transform: translateY(4px);
+    transition:
+      opacity 0.25s ease,
+      transform 0.25s ease;
+    pointer-events: none;
+  }
+
+  a.contributor:hover .contributor-tip,
+  a.contributor:focus-visible .contributor-tip {
+    opacity: 1;
+    transform: none;
+  }
+
+  .projects-more {
+    display: flex;
+    justify-content: center;
+    margin-top: clamp(6rem, 14vh, 10rem);
+  }
+
+  /* Large outlined button; its label is liquid text, so it floods on hover. */
+  .btn-xl {
+    --stroke: 1px;
+    padding: 0.55em 1.1em;
+    border: 1px solid var(--muted);
+    border-radius: 999px;
+    font-size: clamp(1.25rem, 4.4vw, 4rem);
+    line-height: 1.1;
+    color: var(--text);
+    transition: border-color 0.4s ease;
+  }
+  .btn-xl:hover,
+  .btn-xl:focus-visible {
+    border-color: var(--text);
+  }
+
+  /* ---- /projects ---------------------------------------------------------- */
+
+  .all-projects {
+    min-height: 100svh;
+    padding-top: clamp(7rem, 17vh, 10rem);
+    padding-bottom: var(--section-pad);
+  }
+
+  .back-btn {
+    position: fixed;
+    top: 1.1rem;
+    left: 1.25rem;
+    z-index: 70;
+    padding: 0.7rem 1.1rem;
+    border-radius: 999px;
+    font-family: var(--font-display);
+    font-size: 0.72rem;
+    font-weight: 500;
+    letter-spacing: 0.18em;
+    color: var(--text);
+  }
+
+  .all-title {
+    --stroke: 1.5px;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0 0.2em;
+    margin: 1rem 0 clamp(4rem, 10vh, 7rem);
+    font-size: clamp(2.4rem, 11.4vw, 13rem);
+  }
+
+  .all-count {
+    font-size: 0.3em;
+    line-height: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .menu-btn-icon span,
+  .contributor-avatar,
+  .contributor-tip {
+    transition: none;
+  }
+}
+
+/* ==========================================================================
+   Revision 3: progress line, capsule, horizontal Projects → Stack,
+   quote interaction, tesseract annotations
+   ========================================================================== */
+
+@layer components {
+  /* ---- Scroll progress ---------------------------------------------------- */
+
+  .progress {
+    --p: 0;
+    position: fixed;
+    top: 15vh;
+    bottom: max(15vh, 11.5rem);
+    left: 24px;
+    z-index: 55;
+    width: 1px;
+    background: var(--line);
+    pointer-events: none;
+  }
+
+  .progress-fill {
+    position: absolute;
+    inset: 0;
+    background: var(--violet);
+    transform: scaleY(var(--p));
+    transform-origin: top center;
+  }
+
+  .progress-dot {
+    position: absolute;
+    top: calc(var(--p) * 100%);
+    left: 50%;
+    width: 5px;
+    height: 5px;
+    margin: -2.5px 0 0 -2.5px;
+    border-radius: 50%;
+    background: var(--violet);
+  }
+
+  /* Phones: a 2px bar across the very top instead. */
+  @media (max-width: 767px) {
+    .progress {
+      inset: 0 0 auto;
+      width: auto;
+      height: 2px;
+    }
+    .progress-fill {
+      transform: scaleX(var(--p));
+      transform-origin: left center;
+    }
+    .progress-dot {
+      display: none;
+    }
+  }
+
+  /* ---- Bottom-left capsule ------------------------------------------------ */
+
+  .dock {
+    position: fixed;
+    left: 20px;
+    bottom: 24px;
+    z-index: 60;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    width: 44px;
+    padding: 6px 0 9px;
+    border-radius: 999px;
+  }
+
+  .dock-item {
+    display: grid;
+    place-items: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 999px;
+    color: var(--muted);
+    transition:
+      color 0.3s ease,
+      filter 0.3s ease;
+  }
+
+  .dock-item:hover,
+  .dock-item:focus-visible {
+    color: var(--text);
+    filter: drop-shadow(0 0 7px var(--violet));
+  }
+
+  .dock-rule {
+    width: 55%;
+    height: 1px;
+    margin: 3px 0 7px;
+    background: var(--glass-border);
+  }
+
+  /* A real switch: 22×40 track, knob slides between sun (top) and moon (bottom). */
+  .theme-switch {
+    position: relative;
+    width: 22px;
+    height: 40px;
+    border-radius: 999px;
+    /* Violet in dark, taupe in light. */
+    background: color-mix(in srgb, var(--violet) 42%, transparent);
+    box-shadow: inset 0 0 0 1px var(--glass-border);
+    transition: background-color 0.6s ease;
+  }
+
+  .theme-switch[data-on="true"] {
+    background: color-mix(in srgb, var(--taupe) 50%, transparent);
+  }
+
+  .theme-switch-ends {
+    position: absolute;
+    inset: 5px 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-between;
+    color: var(--text);
+    opacity: 0.55;
+  }
+
+  .theme-switch-knob {
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    display: grid;
+    place-items: center;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: var(--text);
+    color: var(--bg);
+    /* Dark is the default theme: start at the moon end before JS positions it. */
+    transform: translateY(18px);
+  }
+
+  @media (max-width: 767px) {
+    .dock {
+      left: 12px;
+      bottom: 14px;
+      width: 40px;
+      padding: 4px 0 7px;
+    }
+    .dock-item {
+      width: 32px;
+      height: 32px;
+    }
+  }
+
+  /* ---- Projects → Stack: one pinned pair, sliding left to right ----------- */
+
+  .duo {
+    position: relative;
+    /* It is the pinned element, so it has to do its own clipping. */
+    overflow-x: clip;
+    background: var(--bg);
+  }
+
+  .stack {
+    z-index: 2;
+    background: var(--bg);
+  }
+
+  /* Pulled up one viewport so Stack's first screen shares the last screen of
+     Projects (matches MQ.pin; ProjectsStack.tsx parks it off the left edge). */
+  @media (min-width: 360px) and (prefers-reduced-motion: no-preference) {
+    .duo .stack {
+      margin-top: -100vh;
+      min-height: 100vh;
+      will-change: transform;
+    }
+  }
+
+  .duo-line {
+    position: absolute;
+    top: 50vh;
+    left: 0;
+    z-index: 3;
+    width: 100%;
+    height: 1px;
+    background: var(--violet);
+    transform: scaleX(0);
+    transform-origin: left center;
+    pointer-events: none;
+  }
+
+  /* ---- Closing quote ------------------------------------------------------ */
+
+  .quote {
+    position: relative;
+    margin-top: clamp(7rem, 20vh, 13rem);
+    padding: 0 var(--gutter);
+    text-align: center;
+  }
+
+  /* One line at every width, so the wave and the trail have a clean baseline. */
+  .quote-text {
+    padding-block: 0.35em;
+    font-size: min(6vw, 7.4rem);
+    line-height: 1.15;
+    white-space: nowrap;
+    filter: url(#ocean);
+  }
+
+  /* Hovered: a faster, finer shimmer, like light on water. */
+  .quote.is-on .quote-text {
+    filter: url(#shimmer);
+  }
+
+  .quote-line {
+    display: inline-block;
+    color: var(--taupe);
+  }
+
+  .quote-char {
+    display: inline-block;
+    white-space: pre;
+    will-change: transform;
+  }
+
+  .quote-by {
+    margin-top: 1.5rem;
+    font-size: 0.85rem;
+    color: var(--muted);
+  }
+
+  .quote-by-name {
+    display: inline-block;
+    letter-spacing: 0.06em;
+  }
+
+  .flag {
+    display: inline-block;
+    margin-left: 0.3em;
+    font-size: 1.6em;
+    transform-origin: 15% 85%;
+    transition: scale 0.5s var(--ease-expo);
+  }
+
+  .quote.is-on .flag {
+    scale: 1.3;
+    animation: flag-wave 1.1s ease-in-out infinite;
+  }
+
+  .quote-trail {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+    pointer-events: none;
+  }
+
+  .quote-trail-path,
+  .quote-trail-x path {
+    fill: none;
+    stroke: var(--taupe);
+    stroke-width: 1.5;
+    stroke-linecap: round;
+  }
+
+  .quote-trail-path {
+    stroke-dasharray: 0 99999;
+  }
+
+  .quote-trail-x path {
+    stroke-width: 2;
+  }
+
+  /* ---- Tesseract annotations ---------------------------------------------- */
+
+  /* Shares the canvas box, so projected vertex positions map straight onto it. */
+  .notes {
+    position: absolute;
+    inset: 12%;
+    pointer-events: none;
+  }
+
+  .notes-lines {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+    pointer-events: none;
+  }
+
+  .note-line {
+    stroke: var(--violet);
+    stroke-width: 1;
+    stroke-dasharray: 1;
+    stroke-dashoffset: 1;
+  }
+
+  .note-ring {
+    fill: none;
+    stroke: var(--violet);
+    stroke-width: 1;
+    visibility: hidden;
+  }
+
+  .note-coord {
+    fill: var(--taupe-ink);
+    font-family: var(--font-body);
+    font-size: 9px;
+    visibility: hidden;
+  }
+
+  /* Pushed out past the canvas box into the frame's corners. */
+  .note {
+    position: absolute;
+    max-width: 52%;
+    margin: -15%;
+    font-family: var(--font-body);
+    font-size: 12px;
+    line-height: 1.45;
+    color: var(--text);
+    visibility: hidden;
+  }
+
+  .note[data-side="right"] {
+    text-align: right;
+  }
+
+  .note-slash {
+    color: var(--taupe-ink);
+  }
+}
+
+@keyframes flag-wave {
+  0%,
+  100% {
+    transform: rotate(-5deg) skewX(8deg);
+  }
+  50% {
+    transform: rotate(6deg) skewX(-9deg) scaleX(1.05);
+  }
 }
