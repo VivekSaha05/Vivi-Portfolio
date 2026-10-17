@@ -17,6 +17,13 @@ type Props = {
   decorative?: boolean;
   /** Told whenever the hover state flips (the marquee uses it to pause a row). */
   onHoverChange?: (hovered: boolean) => void;
+  /**
+   * "outline" (default): stroked text that floods with ink on hover.
+   * "solid": solid ink at rest that floods violet on hover (the hero name).
+   * "outline-violet": stroked text that floods violet: the hero name's wash
+   *   over an outline at rest.
+   */
+  variant?: "outline" | "solid" | "outline-violet";
 };
 
 const EDGE_FILTER = "url(#liquid-edge)";
@@ -27,8 +34,9 @@ const prefersReducedMotion = () =>
   window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
 /**
- * Outlined display text that floods with colour from wherever the cursor
- * enters, and stays flooded for as long as the cursor is on it.
+ * Display text that floods with colour from wherever the cursor enters, and
+ * stays flooded for as long as the cursor is on it. Outline → ink by default;
+ * the "solid" and "outline-violet" variants run the same wash in violet.
  *
  * One `hovered` flag is the whole state machine:
  *   enter → flood from the entry point, keep the rippling edge filter on
@@ -44,6 +52,7 @@ export default function LiquidText({
   delay = 0,
   decorative = false,
   onHoverChange,
+  variant = "outline",
 }: Props) {
   const root = useRef<HTMLSpanElement>(null);
   const outline = useRef<HTMLSpanElement>(null);
@@ -184,7 +193,12 @@ export default function LiquidText({
   return (
     <span
       ref={root}
-      className={cn("lt", className)}
+      className={cn(
+        "lt",
+        variant === "solid" && "lt--solid",
+        variant !== "outline" && "lt--violet",
+        className,
+      )}
       onPointerEnter={enter}
       onPointerLeave={(e) => e.pointerType === "mouse" && leave(e.clientX, e.clientY)}
     >

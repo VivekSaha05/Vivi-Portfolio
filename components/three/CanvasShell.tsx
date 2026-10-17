@@ -15,7 +15,7 @@ type Props = {
   paused?: boolean;
 } & Pick<
   ComponentProps<typeof Canvas>,
-  "camera" | "orthographic" | "gl" | "onCreated" | "flat"
+  "camera" | "orthographic" | "gl" | "onCreated" | "flat" | "resize"
 >;
 
 /**

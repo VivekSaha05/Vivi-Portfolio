@@ -166,6 +166,88 @@ function skyspace() {
   return svg(1600, 1000, p.join("\n"));
 }
 
+/* ------------------------------- Shrujan 2.0 ------------------------------ */
+
+function shrujan() {
+  const p = [];
+  p.push(r(130, 110, 1340, 780, 28, C.elev), o(130, 110, 1340, 780, 28, C.line));
+  p.push(l(130, 182, 1470, 182, C.line));
+  [0, 1, 2].forEach((i) => p.push(c(172 + i * 28, 146, 7, i === 0 ? C.taupe : C.line)));
+  p.push(r(600, 132, 400, 28, 14, C.panel));
+
+  // Hero banner with a countdown
+  p.push(r(180, 230, 820, 250, 22, C.panel));
+  p.push(bar(220, 278, 300, C.text, 22), bar(220, 318, 200, C.muted, 12, 0.7));
+  [0, 1, 2, 3].forEach((i) => {
+    const x = 220 + i * 128;
+    p.push(r(x, 372, 104, 72, 14, C.elev), o(x, 372, 104, 72, 14, i === 0 ? C.violet : C.line));
+    p.push(bar(x + 22, 396, 60, i === 0 ? C.violet : C.text, 16), bar(x + 30, 422, 44, C.muted, 6, 0.6));
+  });
+
+  // Live attendee counter
+  p.push(r(1040, 230, 380, 250, 22, C.panel), o(1040, 230, 380, 250, 22, C.violet));
+  p.push(c(1086, 276, 9, C.violet), bar(1106, 270, 120, C.muted, 12, 0.8));
+  p.push(bar(1080, 320, 230, C.text, 40), bar(1080, 384, 160, C.muted, 10, 0.6));
+  [44, 70, 58, 92, 80, 112, 100].forEach((h, i) =>
+    p.push(r(1084 + i * 44, 460 - h * 0.45, 22, h * 0.45, 5, C.violet, `opacity="${0.5 + i * 0.07}"`)),
+  );
+
+  // Event schedule
+  for (let i = 0; i < 3; i++) {
+    const y = 520 + i * 116;
+    const hot = i === 1;
+    p.push(r(180, y, 1240, 96, 18, C.panel), o(180, y, 1240, 96, 18, hot ? C.violet : C.line, hot ? 3 : 2));
+    p.push(r(204, y + 20, 112, 56, 12, C.elev), bar(226, y + 38, 68, hot ? C.violet : C.taupe, 10));
+    p.push(bar(346, y + 30, [320, 260, 360][i], C.text, 12, 0.9), bar(346, y + 56, [200, 240, 180][i], C.muted, 8, 0.6));
+    p.push(r(1250, y + 28, 140, 40, 20, hot ? C.violet : "none", hot ? "" : `stroke="${C.muted}" stroke-width="2"`));
+    p.push(bar(1282, y + 44, 76, hot ? C.bg : C.muted, 8));
+  }
+
+  return svg(1600, 1000, p.join("\n"));
+}
+
+/* ---------------------------- ProjectsWithMani ---------------------------- */
+
+function storefront() {
+  const p = [];
+  p.push(r(130, 110, 1340, 780, 28, C.elev), o(130, 110, 1340, 780, 28, C.line));
+  p.push(l(130, 182, 1470, 182, C.line));
+  [0, 1, 2].forEach((i) => p.push(c(172 + i * 28, 146, 7, i === 0 ? C.taupe : C.line)));
+  p.push(r(600, 132, 400, 28, 14, C.panel));
+
+  // Cart
+  p.push(`<path d="M1380 136h10l8 28h34l7-20h-44" fill="none" stroke="${C.muted}" stroke-width="2.5" stroke-linejoin="round"/>`);
+  p.push(c(1404, 174, 4, C.muted), c(1426, 174, 4, C.muted), c(1440, 134, 10, C.violet));
+
+  // Video banner
+  p.push(r(180, 220, 1240, 230, 22, C.panel));
+  p.push(c(380, 335, 58, "none", `stroke="${C.violet}" stroke-width="3"`), `<path d="M364 307v56l46-28z" fill="${C.violet}"/>`);
+  p.push(bar(500, 290, 360, C.text, 22), bar(500, 330, 260, C.muted, 12, 0.7));
+  p.push(r(500, 370, 170, 46, 23, C.violet), bar(536, 388, 98, C.bg, 10));
+  p.push(r(1180, 250, 210, 170, 18, C.elev), bar(1204, 386, 120, C.muted, 8, 0.6));
+  p.push(`<path d="M1204 360l52-60 36 40 30-26 44 46z" fill="none" stroke="${C.taupe}" stroke-width="2.5" stroke-linejoin="round"/>`);
+
+  // Product grid
+  for (let col = 0; col < 4; col++) {
+    const x = 180 + col * 316;
+    const hot = col === 2;
+    p.push(r(x, 480, 292, 370, 20, C.panel), o(x, 480, 292, 370, 20, hot ? C.violet : C.line, hot ? 3 : 2));
+    p.push(r(x + 18, 498, 256, 200, 14, C.elev));
+    const kind = col % 2;
+    if (kind === 0) {
+      p.push(r(x + 96, 540, 100, 120, 16, "none", `stroke="${C.taupe}" stroke-width="2.5"`), l(x + 116, 540, x + 116, 520, C.taupe, 2.5), l(x + 176, 540, x + 176, 520, C.taupe, 2.5));
+    } else {
+      p.push(c(x + 146, 598, 54, "none", `stroke="${C.muted}" stroke-width="2.5"`), c(x + 146, 598, 18, C.violet, `opacity="0.7"`));
+    }
+    p.push(bar(x + 18, 726, 180, C.text, 12, 0.9), bar(x + 18, 754, 110, C.muted, 8, 0.6));
+    p.push(bar(x + 18, 798, 70, hot ? C.violet : C.taupe, 14));
+    p.push(r(x + 206, 786, 68, 38, 19, hot ? C.violet : "none", hot ? "" : `stroke="${C.muted}" stroke-width="2"`));
+    p.push(`<path d="M${x + 232} ${805}h16M${x + 240} ${797}v16" stroke="${hot ? C.bg : C.muted}" stroke-width="2.5" stroke-linecap="round"/>`);
+  }
+
+  return svg(1600, 1000, p.join("\n"));
+}
+
 /* -------------------------------- Capsules -------------------------------- */
 
 function codeCapsule() {
@@ -204,6 +286,8 @@ mkdirSync(join(out, "projects"), { recursive: true });
 mkdirSync(join(out, "capsules"), { recursive: true });
 writeFileSync(join(out, "projects/healthcare.svg"), healthcare());
 writeFileSync(join(out, "projects/skyspace.svg"), skyspace());
+writeFileSync(join(out, "projects/shrujan.svg"), shrujan());
+writeFileSync(join(out, "projects/projectswithmani.svg"), storefront());
 writeFileSync(join(out, "capsules/code.svg"), codeCapsule());
 writeFileSync(join(out, "capsules/ui.svg"), uiCapsule());
 console.log("art written");

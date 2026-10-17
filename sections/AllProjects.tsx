@@ -1,13 +1,15 @@
 "use client";
 
-import { useEffect, useRef, type MouseEvent } from "react";
+import { Suspense, useEffect, useRef, type MouseEvent } from "react";
 import LiquidText from "@/components/LiquidText";
 import Magnetic from "@/components/Magnetic";
-import ProjectCard from "@/components/ProjectCard";
+import ProjectsBrowserFromUrl, {
+  DEFAULT_CATEGORY,
+  ProjectsBrowser,
+} from "@/components/ProjectsBrowser";
 import { projects } from "@/data/portfolio";
 import { useAppStore } from "@/hooks/useAppStore";
 import { gsap, MQ, ScrollTrigger } from "@/lib/gsap";
-import { revealProjectCards } from "@/lib/reveal";
 import { appStore } from "@/lib/store";
 import { navigate } from "@/lib/transition";
 
@@ -25,8 +27,8 @@ export default function AllProjects() {
     const el = root.current;
     if (!el) return;
     const mm = gsap.matchMedia(el);
+    // The cards reveal themselves (ProjectsBrowser); this is the page head.
     mm.add(MQ.motion, () => {
-      revealProjectCards();
       gsap.from("[data-all-in]", {
         autoAlpha: 0,
         y: 24,
@@ -68,11 +70,10 @@ export default function AllProjects() {
         </h1>
       </header>
 
-      <div className="shell projects-list all-list">
-        {projects.items.map((project, i) => (
-          <ProjectCard key={project.slug} project={project} index={i} heading="h2" />
-        ))}
-      </div>
+      {/* ?type= is only known in the browser; the prerendered HTML shows the default tab. */}
+      <Suspense fallback={<ProjectsBrowser category={DEFAULT_CATEGORY} />}>
+        <ProjectsBrowserFromUrl />
+      </Suspense>
     </main>
   );
 }

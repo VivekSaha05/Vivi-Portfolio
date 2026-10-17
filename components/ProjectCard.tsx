@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, type PointerEvent } from "react";
+import { useRef, type PointerEvent, type RefObject } from "react";
 import dynamic from "next/dynamic";
 import Image from "next/image";
 import { ArrowIcon } from "@/components/Icons";
@@ -83,33 +83,43 @@ export default function ProjectCard({
   /** Heading level for the title: h3 under a section title, h2 directly under a page title. */
   heading?: "h2" | "h3";
 }) {
-  const media = useRef<HTMLAnchorElement>(null);
+  const media = useRef<HTMLElement>(null);
   const plane = useRef<PlaneState>({ hover: false, x: 0.5, y: 0.5 });
   const near = useInView(media, { rootMargin: "60% 0px", once: true });
   const full = useFullMotion();
   const webgl = useWebGL();
 
   const live = isSet(project.liveUrl) ? project.liveUrl : null;
+  const github = isSet(project.githubUrl) ? project.githubUrl : null;
   const contributors = (project.contributors ?? []).filter((c) => isSet(c.name));
-  const cover = live ?? project.githubUrl;
+  const stack = project.stack.filter((tech) => isSet(tech));
+  const cover = live ?? github;
 
-  const track = (e: PointerEvent<HTMLAnchorElement>) => {
+  const track = (e: PointerEvent<HTMLElement>) => {
     const rect = e.currentTarget.getBoundingClientRect();
     plane.current.x = (e.clientX - rect.left) / rect.width;
     plane.current.y = (e.clientY - rect.top) / rect.height;
   };
 
+  // Without any link yet, the cover is a plain frame rather than a dead link.
+  const Media = cover ? "a" : "div";
+  const link = cover
+    ? {
+        href: cover,
+        target: "_blank",
+        rel: "noopener noreferrer",
+        "data-cursor": "view",
+        "aria-label": `View ${project.title} ${live ? "live" : "on GitHub"} (opens in a new tab)`,
+      }
+    : null;
+
   return (
     <article className="project-card" data-flip={index % 2 === 1}>
-      <a
-        ref={media}
-        href={cover}
-        target="_blank"
-        rel="noopener noreferrer"
+      <Media
+        ref={media as RefObject<HTMLAnchorElement & HTMLDivElement>}
         className="project-media"
-        data-cursor="view"
-        aria-label={`View ${project.title} ${live ? "live" : "on GitHub"} (opens in a new tab)`}
-        onPointerEnter={(e) => {
+        {...link}
+        onPointerEnter={(e: PointerEvent<HTMLElement>) => {
           plane.current.hover = true;
           track(e);
         }}
@@ -134,23 +144,26 @@ export default function ProjectCard({
             </SceneBoundary>
           )}
         </span>
-      </a>
+      </Media>
 
       <div className="project-info liquid-glass liquid-glass--refract">
         <p className="eyebrow">
-          {String(index + 1).padStart(2, "0")} · {project.date}
+          {String(index + 1).padStart(2, "0")}
+          {isSet(project.date) && ` · ${project.date}`}
         </p>
         <Heading className="project-name display">
           <LiquidText text={project.title} />
         </Heading>
         <SplitReveal className="project-summary">{project.description}</SplitReveal>
-        <ul className="pills" aria-label="Tech stack">
-          {project.stack.map((tech) => (
-            <li key={tech} className="pill">
-              {tech}
-            </li>
-          ))}
-        </ul>
+        {stack.length > 0 && (
+          <ul className="pills" aria-label="Tech stack">
+            {stack.map((tech) => (
+              <li key={tech} className="pill">
+                {tech}
+              </li>
+            ))}
+          </ul>
+        )}
 
         {contributors.length > 0 && (
           <div className="contributors">
@@ -162,13 +175,15 @@ export default function ProjectCard({
         )}
 
         <div className="project-actions">
-          <Magnetic
-            href={project.githubUrl}
-            className="btn"
-            aria-label={`GitHub — ${project.title} (opens in a new tab)`}
-          >
-            GitHub <ArrowIcon />
-          </Magnetic>
+          {github && (
+            <Magnetic
+              href={github}
+              className="btn"
+              aria-label={`GitHub — ${project.title} (opens in a new tab)`}
+            >
+              GitHub <ArrowIcon />
+            </Magnetic>
+          )}
           {live && (
             <Magnetic
               href={live}

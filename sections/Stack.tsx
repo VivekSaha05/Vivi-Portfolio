@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, type PointerEvent } from "react";
 import dynamic from "next/dynamic";
 import LiquidText from "@/components/LiquidText";
 import ScrambleText from "@/components/ScrambleText";
+import { GroupIcon, TechIcon } from "@/components/TechIcon";
 import SceneBoundary from "@/components/three/SceneBoundary";
 import { stack } from "@/data/portfolio";
 import { useInView } from "@/hooks/useInView";
@@ -20,6 +21,14 @@ const Tesseract = dynamic(() => import("@/components/three/Tesseract"), {
 
 /** px per second each row drifts when the page is still. */
 const DRIFT = 110;
+
+/** Where the pointer crossed a tech capsule: its soft fill floods from (and drains to) there. */
+function aim(e: PointerEvent<HTMLElement>) {
+  const el = e.currentTarget;
+  const rect = el.getBoundingClientRect();
+  el.style.setProperty("--x", `${e.clientX - rect.left}px`);
+  el.style.setProperty("--y", `${e.clientY - rect.top}px`);
+}
 
 export default function Stack() {
   const root = useRef<HTMLElement>(null);
@@ -160,11 +169,13 @@ export default function Stack() {
               onPointerLeave={hover(null)}
             >
               <h3 className="stack-group-title">
+                <GroupIcon name={group.name} />
                 <ScrambleText text={group.name} trigger="hover" />
               </h3>
               <ul className="pills">
                 {group.items.map((item) => (
-                  <li key={item} className="pill">
+                  <li key={item} className="pill pill--tech" onPointerEnter={aim} onPointerLeave={aim}>
+                    <TechIcon name={item} />
                     {item}
                   </li>
                 ))}

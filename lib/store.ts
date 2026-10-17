@@ -50,9 +50,10 @@ export const appStore = {
  * Kept outside React on purpose: nothing here should cause a re-render.
  */
 export const motion = {
-  /** Hero dolly zoom progress, 0 → 1. */
-  dolly: 0,
-  /** Particle portrait assembly progress, 0 (chaos) → 1 (face). */
+  /**
+   * Particle portrait assembly progress, 0 (chaos) → 1 (face). Played once by
+   * About when the portrait first scrolls in; never scrubbed back.
+   */
   portrait: 0,
 };
 
@@ -60,11 +61,9 @@ export const motion = {
 const tasks = new Map<string, { weight: number; value: number }>([
   ["fonts", { weight: 2, value: 0 }],
   ["images", { weight: 2, value: 0 }],
-  ["scene", { weight: 3, value: 0 }],
-  ["textures", { weight: 1, value: 0 }],
 ]);
 
-export type LoadingTask = "fonts" | "images" | "scene" | "textures";
+export type LoadingTask = "fonts" | "images";
 
 export const loading = {
   /** Forces every task to done; the loader's safety net if an asset stalls. */

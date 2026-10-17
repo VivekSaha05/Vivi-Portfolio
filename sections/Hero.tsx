@@ -1,21 +1,13 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import dynamic from "next/dynamic";
+import DotGrid from "@/components/DotGrid";
 import LiquidText from "@/components/LiquidText";
 import Magnetic from "@/components/Magnetic";
-import SceneBoundary from "@/components/three/SceneBoundary";
 import { hero, site } from "@/data/portfolio";
 import { useAppStore } from "@/hooks/useAppStore";
-import { useWebGL } from "@/hooks/useWebGL";
 import { gsap, MQ } from "@/lib/gsap";
 import { scrollToSection } from "@/lib/scroll";
-import { loading, motion } from "@/lib/store";
-import { hasWebGL } from "@/lib/utils";
-
-const HeroScene = dynamic(() => import("@/components/three/HeroScene"), {
-  ssr: false,
-});
 
 /** `<Developer stack="…" />`, split into syntax-coloured tokens for typing. */
 const TAG_TOKENS: { text: string; kind: "punct" | "name" | "attr" | "string" }[] = [
@@ -68,23 +60,12 @@ function typeTag(root: HTMLElement, count: number) {
   caret.style.transform = `translate(${stop.x}px, ${stop.y}px)`;
 }
 
-const sceneUnavailable = () => {
-  loading.report("scene", 1);
-  loading.report("textures", 1);
-};
-
 export default function Hero() {
   const root = useRef<HTMLElement>(null);
   const ready = useAppStore((s) => s.ready);
   const covered = useAppStore((s) => s.covered);
-  const webgl = useWebGL();
   // The intro waits for the loader, and for a page transition to uncover it.
   const live = ready && !covered;
-
-  // Without WebGL there is no scene to wait for.
-  useEffect(() => {
-    if (!hasWebGL()) sceneUnavailable();
-  }, []);
 
   // Intro: plays as the loader wipes away, so there is never an empty frame.
   useEffect(() => {
@@ -131,8 +112,8 @@ export default function Hero() {
 
   // Scroll-out: the hero is pinned with no spacer, so the About card (next in
   // the flow, stacked above) slides over it. Meanwhile the hero steps back:
-  // it shrinks slightly, the scene and small type dim and soften, and the
-  // camera eases away. The name only dims, so it stays sharp until covered.
+  // it shrinks slightly, and the dot grid and small type dim and soften. The
+  // name only dims, so it stays sharp until covered.
   useEffect(() => {
     const el = root.current;
     if (!el) return;
@@ -153,7 +134,6 @@ export default function Hero() {
             refreshPriority: 30,
           },
         })
-        .to(motion, { dolly: 1 }, 0)
         .to(".hero-inner", { scale: 0.92 }, 0)
         .fromTo(
           ".hero-recede",
@@ -167,10 +147,6 @@ export default function Hero() {
           { filter: "brightness(0.55)" },
           0,
         );
-
-      return () => {
-        motion.dolly = 0;
-      };
     });
 
     return () => mm.revert();
@@ -179,12 +155,9 @@ export default function Hero() {
   return (
     <section id="home" ref={root} className="hero" aria-label="Introduction">
       <div className="hero-inner">
+        {/* Background sits last in the visual order: faint, and under the grain. */}
         <div className="hero-stage hero-recede">
-          {webgl && (
-            <SceneBoundary onError={sceneUnavailable}>
-              <HeroScene />
-            </SceneBoundary>
-          )}
+          <DotGrid className="hero-dots" />
         </div>
 
         <div className="hero-content shell">
@@ -201,6 +174,7 @@ export default function Hero() {
                   key={word}
                   text={word}
                   decorative
+                  variant="solid"
                   scramble="both"
                   play={live}
                   delay={0.55 + i * 0.18}

@@ -271,6 +271,16 @@
     clip-path: circle(var(--r) at var(--x) var(--y));
   }
 
+  /* Solid variant: full ink at rest. */
+  .lt--solid .lt-outline {
+    -webkit-text-fill-color: var(--text);
+    -webkit-text-stroke: 0;
+  }
+  /* Violet wash (the hero name, and outlined text that floods violet). */
+  .lt--violet .lt-fill {
+    color: var(--violet);
+  }
+
   /* ---- Liquid glass ------------------------------------------------------ */
 
   .liquid-glass {
@@ -590,12 +600,26 @@
     inset: 0;
   }
 
-  .hero-canvas {
+  /* The dot grid. The vignette is a mask: dots fade out toward every edge
+     (into --bg) and are held back in the middle, behind the name. */
+  .hero-dots {
     position: absolute;
     inset: 0;
-    /* Dissolve into the page so the canvas has no visible bottom edge. */
-    -webkit-mask-image: linear-gradient(to bottom, #000 78%, transparent);
-    mask-image: linear-gradient(to bottom, #000 78%, transparent);
+    display: block;
+    width: 100%;
+    height: 100%;
+    -webkit-mask-image: radial-gradient(
+      ellipse 75% 70% at 50% 50%,
+      rgb(0 0 0 / 0.5) 0%,
+      #000 50%,
+      transparent 100%
+    );
+    mask-image: radial-gradient(
+      ellipse 75% 70% at 50% 50%,
+      rgb(0 0 0 / 0.5) 0%,
+      #000 50%,
+      transparent 100%
+    );
   }
 
   .hero-content {
@@ -688,9 +712,6 @@
   }
 
   @media (max-width: 767px) {
-    .hero-canvas {
-      opacity: 0.55;
-    }
     .hero-name {
       --stroke: 1px;
       flex-direction: column;
@@ -702,23 +723,28 @@
      02 — About
      ========================================================================== */
 
-  .about-grid {
-    display: grid;
-    grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
-    align-items: center;
-    gap: clamp(2rem, 5vw, 5rem);
-  }
-
+  /* Spacing in this section sits on an 8px scale (0.5rem steps). */
   .about {
     overflow: clip;
   }
 
-  .about-text {
+  .about .section-head {
+    margin-bottom: 4rem;
+  }
+
+  /* Text ~55%, portrait ~45%, centred on each other. */
+  .about-grid {
     position: relative;
-    z-index: 1;
+    display: grid;
+    grid-template-columns: minmax(0, 11fr) minmax(0, 9fr);
+    align-items: center;
+    gap: 4rem;
+  }
+
+  .about-text {
     font-family: var(--font-display);
-    font-size: clamp(1.5rem, 3.2vw, 3.3rem);
-    line-height: 1.24;
+    font-size: clamp(1.5rem, 2.6vw, 2.75rem);
+    line-height: 1.25;
     letter-spacing: -0.035em;
   }
 
@@ -750,36 +776,67 @@
     transform: scale(1.14);
   }
 
+  /* The right column, 80% of the viewport tall. svh, not vh: a phone's
+     address bar showing or hiding never changes the portrait's size. */
   .about-portrait {
     position: relative;
     width: 100%;
-    max-height: 78vh;
-    aspect-ratio: 9 / 10;
+    height: max(520px, 80svh);
   }
 
-  /* The particle field is far larger than its column: the face fills the
-     frame and the feathered rim and orbiting dust spill out around it. It
-     ignores the pointer so the text it overlaps stays selectable. */
+  /* With particles the column is only a layout slot: it goes static so the
+     canvas positions against the grid and can span the whole section. */
+  .about-portrait:has(> .portrait-canvas) {
+    position: static;
+  }
+
+  /* Full width, twice the row's height, centred on the row (the portrait is
+     centred in it). The camera places the face over the right column and
+     the shader fades particles out radially around it, so there is no box,
+     mask or edge here. It ignores the pointer (hover is projected from the
+     page cursor), so the text it sits behind stays clickable. */
   .portrait-canvas {
     position: absolute;
-    inset: -55% -70%;
+    z-index: 0;
+    top: -50%;
+    bottom: -50%;
+    left: calc(50% - 50vw);
+    width: 100vw;
     pointer-events: none;
-    /* Feather the canvas itself, so stray particles never end on a straight edge. */
-    -webkit-mask-image: radial-gradient(ellipse 50% 50% at 50% 46%, #000 52%, transparent 96%);
-    mask-image: radial-gradient(ellipse 50% 50% at 50% 46%, #000 52%, transparent 96%);
   }
 
-  /* Copy always sits above the particle field. */
+  /* Text sits above the halo that drifts under it. */
   .about .section-head,
+  .about-copy,
   .about .stats {
     position: relative;
     z-index: 1;
   }
 
+  /* A wide, edgeless wash of the surface colour behind the lead, so it stays
+     readable over the drifting particles. */
+  .about-copy::before {
+    content: "";
+    position: absolute;
+    inset: -35% -20%;
+    z-index: -1;
+    pointer-events: none;
+    background: radial-gradient(
+      closest-side,
+      color-mix(in srgb, var(--bg-elev) 30%, transparent),
+      transparent
+    );
+  }
+
+  /* No WebGL or reduced motion: the photo in a capsule, 70% of the height. */
   .portrait-fallback {
     position: absolute;
-    inset: 4% 14%;
+    top: 15%;
+    bottom: 15%;
+    left: 50%;
+    aspect-ratio: 3 / 4;
     overflow: hidden;
+    translate: -50% 0;
     border: 1px solid var(--line);
     border-radius: 999px;
   }
@@ -787,46 +844,461 @@
     filter: url(#ripple);
   }
 
+  /* Impact numbers: four compact hairline cards across the full width. */
   .stats {
     display: grid;
     grid-template-columns: repeat(4, minmax(0, 1fr));
-    gap: 1.5rem;
-    margin-top: clamp(4rem, 10vh, 7rem);
-    padding-top: 2rem;
-    border-top: 1px solid var(--line);
+    gap: 16px;
+    margin-top: 4rem;
+  }
+
+  .stat {
+    padding: 16px 20px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    transition: border-color 0.4s ease;
+  }
+  .stat:hover {
+    border-color: var(--violet);
   }
 
   .stat-value {
     display: block;
     font-family: var(--font-display);
-    font-size: clamp(2rem, 4.6vw, 4.2rem);
+    font-size: 1.75rem;
     font-weight: 500;
-    line-height: 1;
-    letter-spacing: -0.04em;
+    line-height: 1.1;
+    letter-spacing: -0.03em;
     font-variant-numeric: tabular-nums;
+    white-space: nowrap;
   }
 
+  /* Two lines at most. */
   .stat-label {
-    display: block;
-    margin-top: 0.6rem;
-    font-size: 0.72rem;
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
+    display: -webkit-box;
+    margin-top: 6px;
+    overflow: hidden;
+    font-family: var(--font-body);
+    font-size: 0.75rem;
+    line-height: 1.4;
     color: var(--muted);
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
   }
 
+  /* Phones: portrait on top, the lead centred below it. */
   @media (max-width: 767px) {
+    .about .section-head {
+      margin-bottom: 3rem;
+    }
     .about-grid {
       grid-template-columns: minmax(0, 1fr);
+      gap: 2rem;
     }
     .about-portrait {
-      max-width: 22rem;
-      margin-inline: auto;
+      order: -1;
+      height: 70svh;
+    }
+    /* Centred on the portrait slot (the first 70svh of the grid). */
+    .portrait-canvas {
+      top: -35svh;
+      bottom: auto;
+      height: 140svh;
+    }
+    .about-copy {
+      text-align: center;
     }
     .stats {
       grid-template-columns: repeat(2, minmax(0, 1fr));
-      row-gap: 2.25rem;
+      margin-top: 3rem;
     }
+  }
+
+  /* ---- About: tags, copy, belief, details --------------------------------- */
+
+  .about-eyebrow {
+    text-transform: none;
+    letter-spacing: 0.08em;
+  }
+
+  .about-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+  }
+
+  /* ---- Belief: a centred statement piece ---------------------------------- */
+
+  .belief {
+    position: relative;
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 120px 0;
+    text-align: center;
+    text-wrap: balance;
+  }
+
+  /* Oversized quote marks, faint violet, tucked behind the text's corners. */
+  .belief-mark {
+    position: absolute;
+    font-family: var(--font-cursive);
+    font-size: 220px;
+    line-height: 1;
+    color: var(--violet);
+    opacity: 0.15;
+    pointer-events: none;
+    user-select: none;
+  }
+  .belief-mark--open {
+    top: 80px;
+    left: 0;
+  }
+  .belief-mark--close {
+    right: 0;
+    bottom: 20px;
+  }
+
+  .belief-quote {
+    position: relative;
+  }
+
+  /* The outlined line, inside a mask it rises out of on entry. */
+  .belief-line {
+    display: block;
+    overflow: hidden;
+    padding-block: 0.08em 0.12em;
+  }
+
+  .belief-line-inner {
+    --stroke: 1px;
+    display: block;
+    font-family: var(--font-display);
+    font-size: clamp(28px, 4vw, 52px);
+    line-height: 1.15;
+    letter-spacing: -0.03em;
+  }
+  /* Too long for one line at this size: let the liquid text wrap, evenly.
+     Its fill copy sits on the same box, so it wraps identically. */
+  .belief-line-inner .lt {
+    white-space: normal;
+    text-wrap: balance;
+  }
+
+  .belief-accent {
+    display: block;
+    margin-top: 0.5rem;
+    font-size: clamp(44px, 6.5vw, 88px);
+    line-height: 1.05;
+    letter-spacing: -0.01em;
+    color: var(--taupe);
+  }
+
+  /* "rewrite" carries a hand-drawn underline that draws itself on entry. */
+  .belief-underlined {
+    position: relative;
+    display: inline-block;
+  }
+
+  .belief-underline {
+    position: absolute;
+    left: -3%;
+    bottom: -0.08em;
+    width: 106%;
+    height: 0.28em;
+    overflow: visible;
+  }
+
+  .belief-underline path {
+    fill: none;
+    stroke: var(--violet);
+    stroke-width: 2.5px;
+    stroke-linecap: round;
+    stroke-dasharray: 1;
+    stroke-dashoffset: 0;
+    vector-effect: non-scaling-stroke;
+  }
+
+  .belief-by {
+    margin-top: 2rem;
+    font-family: var(--font-body);
+    font-size: 1rem;
+    color: var(--muted);
+  }
+
+  /* ---- "know more about me" ---------------------------------------------- */
+
+  .about-more-trigger {
+    display: flex;
+    justify-content: center;
+  }
+
+  .about-more-btn {
+    font-family: var(--font-display);
+    font-size: 1rem;
+    letter-spacing: -0.01em;
+  }
+
+  .about-more-btn .magnetic-label {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 0.6em;
+  }
+
+  /* At this size the rippled edge filter offsets the glyphs enough to look
+     doubled: keep the circular wash, drop the ripple. */
+  .about-more-btn .lt-wrap {
+    filter: none !important;
+  }
+
+  .about-more-mark {
+    display: inline-block;
+    color: var(--violet);
+  }
+
+  /* Closed by default; GSAP tweens the height open and shut. */
+  .about-more-panel {
+    height: 0;
+    overflow: hidden;
+  }
+
+  /* One row of four on desktop, hairline dividers centred in the gaps. */
+  .about-details {
+    --gap: 32px;
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 2.5rem var(--gap);
+    max-width: 1200px;
+    margin-inline: auto;
+    padding: 3rem 0 1rem;
+    font-size: 0.8125rem;
+  }
+
+  .about-block {
+    position: relative;
+  }
+  .about-block + .about-block::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: calc(var(--gap) / -2);
+    width: 1px;
+    background: var(--line);
+  }
+
+  .about-block-title {
+    margin-bottom: 1.25rem;
+    text-transform: none;
+    letter-spacing: 0.08em;
+  }
+
+  /* Quick facts: label above value, one per line. */
+  .facts {
+    display: grid;
+    gap: 0.75rem;
+  }
+
+  .fact dt {
+    font-size: 0.6875rem;
+    letter-spacing: 0.06em;
+    color: var(--muted);
+  }
+
+  .fact dd {
+    margin-top: 0.125rem;
+    font-family: var(--font-display);
+    font-size: 0.8125rem;
+    line-height: 1.45;
+  }
+
+  /* Education: a thin violet rail with dot markers. */
+  .edu {
+    position: relative;
+    display: grid;
+    gap: 1rem;
+    padding-left: 1.25rem;
+  }
+
+  .edu::before {
+    content: "";
+    position: absolute;
+    top: 0.45rem;
+    bottom: 0.45rem;
+    left: 3px;
+    width: 1px;
+    background: var(--violet);
+  }
+
+  .edu-item {
+    position: relative;
+    display: grid;
+    gap: 0.125rem;
+  }
+
+  .edu-item::before {
+    content: "";
+    position: absolute;
+    top: 0.38rem;
+    left: calc(-1.25rem + 0.5px);
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--bg-elev);
+    box-shadow: 0 0 0 1.5px var(--violet);
+  }
+
+  .edu-item:first-child::before {
+    background: var(--violet);
+  }
+
+  .edu-period {
+    font-size: 0.6875rem;
+    letter-spacing: 0.06em;
+    color: var(--taupe-ink);
+  }
+
+  .edu-title {
+    font-family: var(--font-display);
+    font-size: 0.8125rem;
+  }
+
+  .edu-school {
+    font-size: 0.75rem;
+    line-height: 1.4;
+    color: var(--muted);
+  }
+
+  /* Activities: compact rows that flood like the chips. */
+  .activities {
+    display: grid;
+    gap: 0.5rem;
+  }
+
+  .chip.activity {
+    display: flex;
+    width: 100%;
+    padding: 0.5rem 0.75rem;
+    border-radius: 12px;
+    font-size: 0.8125rem;
+    letter-spacing: 0;
+    white-space: normal;
+  }
+
+  .activity .chip-inner {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: center;
+    gap: 0.1rem 0.625rem;
+    width: 100%;
+  }
+
+  .activity-icon {
+    grid-row: span 2;
+    color: var(--violet);
+    transition: color 0.45s var(--ease-inout);
+  }
+  .chip:hover .activity-icon,
+  .chip:focus-visible .activity-icon {
+    color: var(--bg);
+  }
+
+  .activity-label {
+    line-height: 1.4;
+  }
+
+  .activity-meta {
+    font-size: 0.6875rem;
+    color: var(--muted);
+    transition: color 0.45s var(--ease-inout);
+  }
+  .chip:hover .activity-meta,
+  .chip:focus-visible .activity-meta {
+    color: color-mix(in srgb, var(--bg) 75%, transparent);
+  }
+
+  .about-connect {
+    display: grid;
+    justify-items: start;
+    gap: 0.5rem;
+    font-size: 0.8125rem;
+  }
+  .about-connect .text-link {
+    padding: 0.125rem 0;
+    font-size: inherit;
+  }
+
+  /* Tablet: 2×2, so the second row starts without a divider. */
+  @media (max-width: 1023px) {
+    .about-details {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      max-width: 720px;
+    }
+    .about-block:nth-child(3)::before {
+      display: none;
+    }
+  }
+
+  @media (max-width: 767px) {
+    .belief {
+      padding: 80px 0;
+    }
+    .belief-mark {
+      font-size: 110px;
+    }
+    .belief-mark--open {
+      top: 50px;
+    }
+    .about-details {
+      grid-template-columns: minmax(0, 1fr);
+    }
+    .about-block + .about-block::before {
+      display: none;
+    }
+  }
+
+  /* ---- Liquid chip: outlined capsule that floods from the cursor ---------- */
+
+  .chip {
+    --x: 50%;
+    --y: 50%;
+    position: relative;
+    isolation: isolate;
+    display: inline-flex;
+    align-items: center;
+    overflow: hidden;
+    padding: 0.42rem 0.9rem;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    font-family: var(--font-body);
+    font-size: 0.74rem;
+    line-height: 1.35;
+    white-space: nowrap;
+    color: var(--text);
+    transition:
+      color 0.45s var(--ease-inout),
+      border-color 0.45s var(--ease-inout);
+  }
+
+  .chip::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background: var(--text);
+    clip-path: circle(0% at var(--x) var(--y));
+    transition: clip-path 0.6s var(--ease-inout);
+  }
+
+  .chip:hover,
+  .chip:focus-visible {
+    color: var(--bg);
+    border-color: var(--text);
+  }
+  .chip:hover::before,
+  .chip:focus-visible::before {
+    clip-path: circle(150% at var(--x) var(--y));
   }
 
   /* ==========================================================================
@@ -891,7 +1363,8 @@
     z-index: 1;
     display: flex;
     align-items: stretch;
-    gap: clamp(2rem, 5vw, 6rem);
+    --xp-gap: clamp(2rem, 5vw, 6rem);
+    gap: var(--xp-gap);
     width: max-content;
     height: min(72vh, 42rem);
     padding-left: var(--gutter);
@@ -957,16 +1430,36 @@
     color: var(--muted);
   }
 
-  .xp-points {
+  .xp-body {
     position: relative;
     z-index: 1;
     display: grid;
     grid-column: 2;
     grid-row: 1 / span 2;
-    gap: 0.85rem;
     align-content: center;
-    font-size: clamp(0.8rem, 1.05vw, 0.95rem);
+    gap: 0.6rem;
+  }
+
+  .xp-label {
+    font-size: 0.66rem;
+    font-weight: 400;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--taupe-ink);
+  }
+
+  .xp-summary {
+    margin-bottom: 0.6rem;
+    font-size: clamp(0.78rem, 0.98vw, 0.9rem);
     line-height: 1.55;
+    color: var(--muted);
+  }
+
+  .xp-points {
+    display: grid;
+    gap: 0.6rem;
+    font-size: clamp(0.76rem, 0.98vw, 0.9rem);
+    line-height: 1.5;
   }
 
   .xp-points li {
@@ -1012,6 +1505,166 @@
     height: 1px;
     background: var(--violet);
     transform-origin: left center;
+  }
+
+  /* ---- Experience: header, logos, timeline markers, closing panel -------- */
+
+  .xp-title {
+    font-size: clamp(2.6rem, 5.6vw, 6rem);
+  }
+
+  .xp-subline {
+    max-width: 30ch;
+    font-size: clamp(1.15rem, 1.7vw, 1.6rem);
+    line-height: 1.25;
+  }
+
+  .xp-expertise {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.45rem;
+  }
+
+  .logo-badge {
+    position: relative;
+    display: grid;
+    place-items: center;
+    width: 48px;
+    height: 48px;
+    margin-bottom: 1rem;
+    border-radius: 14px;
+  }
+
+  .logo-badge > * {
+    grid-area: 1 / 1;
+  }
+
+  .logo-initials {
+    padding: 0.2rem 0.45rem;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    font-family: var(--font-display);
+    font-size: 0.68rem;
+    font-weight: 500;
+    letter-spacing: 0.04em;
+    color: var(--text);
+    transition: opacity 0.3s ease;
+  }
+  .logo-initials.is-hidden {
+    opacity: 0;
+  }
+
+  /* Monochrome at rest; the brand colour fades in while the panel is hovered. */
+  .logo-img {
+    width: 30px;
+    height: 30px;
+    object-fit: contain;
+    opacity: 0;
+    filter: grayscale(1) brightness(1.8);
+    transition:
+      filter 0.6s ease,
+      opacity 0.4s ease;
+  }
+  .logo-img.is-loaded {
+    opacity: 1;
+  }
+  [data-theme="light"] .logo-img {
+    filter: grayscale(1);
+  }
+  .xp-panel:hover .logo-img,
+  .xp-panel:focus-within .logo-img {
+    filter: none;
+  }
+
+  /* A zero-width flex item in the gap before each panel: the negative margins
+     cancel the extra gap it would add, centring it between the two neighbours. */
+  .xp-marker {
+    position: relative;
+    z-index: 1;
+    flex: none;
+    width: 0;
+    margin-inline: calc(var(--xp-gap) / -2);
+    pointer-events: none;
+  }
+
+  .xp-marker-dot {
+    position: absolute;
+    top: 50%;
+    left: 0;
+    width: 9px;
+    height: 9px;
+    margin: -4.5px 0 0 -4.5px;
+    border-radius: 50%;
+    background: var(--bg);
+    box-shadow: 0 0 0 1px var(--line);
+    transition:
+      background-color 0.5s ease,
+      box-shadow 0.5s ease;
+  }
+
+  .xp-marker-label {
+    position: absolute;
+    top: calc(50% - 2rem);
+    left: 0;
+    font-size: 0.68rem;
+    letter-spacing: 0.08em;
+    white-space: nowrap;
+    color: var(--muted);
+    translate: -50% 0;
+    transition: color 0.5s ease;
+  }
+
+  .xp-marker.is-lit .xp-marker-dot {
+    background: var(--violet);
+    box-shadow:
+      0 0 0 1px var(--violet),
+      0 0 0 6px var(--violet-soft);
+  }
+  .xp-marker.is-lit .xp-marker-label {
+    color: var(--violet);
+  }
+
+  .xp-panel--closing {
+    grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+    width: min(70vw, 60rem);
+  }
+
+  .xp-panel--closing .xp-panel-head {
+    align-self: center;
+  }
+
+  .xp-closing-title {
+    margin-bottom: 1rem;
+    font-size: clamp(2rem, 3.8vw, 3.9rem);
+    line-height: 1;
+  }
+
+  .xp-cards {
+    display: grid;
+    grid-column: 2;
+    grid-row: 1 / span 2;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-content: center;
+    gap: 0.75rem;
+  }
+
+  .xp-card {
+    display: grid;
+    align-content: start;
+    gap: 0.8rem;
+    padding: 1.1rem 1.15rem 1.25rem;
+    border: 1px solid var(--line);
+    border-radius: 18px;
+    font-size: 0.84rem;
+    line-height: 1.5;
+    transition: border-color 0.4s ease;
+  }
+  .xp-card:hover {
+    border-color: var(--violet);
+  }
+
+  .xp-card-icon {
+    color: var(--violet);
   }
 
   /* Fallback (matches MQ.stacked in lib/gsap.ts): no pin, panels stack vertically. */
@@ -1061,10 +1714,16 @@
     }
 
     .xp-panel-head,
-    .xp-points,
+    .xp-body,
+    .xp-cards,
     .xp-stack {
       grid-column: 1;
       grid-row: auto;
+    }
+
+    /* Stacked cards carry their dates in the eyebrow; no timeline markers. */
+    .xp-marker {
+      display: none;
     }
 
     .xp-line {
@@ -1264,6 +1923,60 @@
   }
   .stack-group:hover .stack-group-title {
     color: var(--violet);
+  }
+
+  .stack-group-title {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .group-icon {
+    display: inline-flex;
+    flex: none;
+  }
+
+  /* Tech capsule with its icon. Same height, font and vertical padding as a
+     plain .pill: the 14px icon sits inside the 16px line box, and only the
+     left padding is trimmed a little to balance the icon. */
+  .pill--tech {
+    --x: 50%;
+    --y: 50%;
+    position: relative;
+    isolation: isolate;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    overflow: hidden;
+    padding-left: 0.56rem;
+  }
+
+  /* A soft violet wash floods from the cursor, light enough that the brand
+     colours stay readable on top of it. */
+  .pill--tech::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background: color-mix(in srgb, var(--violet) 16%, transparent);
+    clip-path: circle(0% at var(--x) var(--y));
+    transition: clip-path 0.6s var(--ease-inout);
+  }
+  .pill--tech:hover::before {
+    clip-path: circle(150% at var(--x) var(--y));
+  }
+
+  .tech-icon {
+    display: inline-flex;
+    flex: none;
+    color: var(--muted);
+    transition: color 0.45s var(--ease-inout);
+  }
+  .pill--tech:hover .tech-icon {
+    color: var(--brand);
+  }
+  [data-theme="light"] .pill--tech:hover .tech-icon {
+    color: var(--brand-light);
   }
 
   .stack-cube {
@@ -1664,7 +2377,7 @@
 
   @media (min-width: 360px) and (max-width: 767px) and (prefers-reduced-motion: no-preference) {
     .xp-track {
-      gap: 4vw;
+      --xp-gap: 4vw;
       height: auto;
       max-height: calc(100svh - 7.5rem);
       padding-right: 6vw;
@@ -1674,37 +2387,77 @@
       width: 70vw;
     }
 
+    .xp-title {
+      font-size: 11vw;
+    }
+
     /* 88vw: the next panel always peeks in from the right. */
     .xp-panel {
       grid-template-columns: minmax(0, 1fr);
       grid-template-rows: auto;
       align-content: start;
-      gap: 0.9rem;
+      gap: 0.8rem;
       width: 88vw;
-      padding: 1.25rem 1.25rem 1.4rem;
+      padding: 1.1rem 1.15rem 1.25rem;
       border-radius: 22px;
     }
 
     .xp-panel-head,
-    .xp-points,
+    .xp-body,
+    .xp-cards,
     .xp-stack {
       grid-column: 1;
       grid-row: auto;
     }
 
+    /* Room is tight on a phone: the focus pills go, the copy tightens. */
+    .xp-stack {
+      display: none;
+    }
+
+    .logo-badge {
+      width: 38px;
+      height: 38px;
+      margin-bottom: 0.6rem;
+    }
+
     .xp-company {
-      margin: 0.5rem 0 0.4rem;
-      font-size: clamp(2rem, 11vw, 3rem);
+      margin: 0.35rem 0 0.3rem;
+      font-size: clamp(1.8rem, 10vw, 2.6rem);
     }
 
     .xp-role {
-      font-size: 0.82rem;
+      font-size: 0.78rem;
+    }
+
+    .xp-body {
+      gap: 0.4rem;
+    }
+
+    .xp-summary {
+      margin-bottom: 0.3rem;
+      font-size: 0.72rem;
+      line-height: 1.45;
     }
 
     .xp-points {
+      gap: 0.4rem;
+      font-size: 0.72rem;
+      line-height: 1.42;
+    }
+
+    .xp-cards {
+      grid-template-columns: minmax(0, 1fr);
       gap: 0.5rem;
+    }
+
+    .xp-card {
+      padding: 0.75rem 0.9rem;
       font-size: 0.76rem;
-      line-height: 1.45;
+    }
+
+    .xp-marker-label {
+      font-size: 0.6rem;
     }
 
     .xp-index {
@@ -1847,14 +2600,87 @@
     font-size: 0.3em;
     line-height: 1;
   }
+
+  /* PROFESSIONAL / PERSONAL: a glass pill with a violet indicator that the
+     script slides (x + width) under the selected tab. */
+  .all-toggle-wrap {
+    margin: calc(clamp(4rem, 10vh, 7rem) * -0.55) 0 clamp(4rem, 10vh, 7rem);
+  }
+
+  .all-toggle {
+    position: relative;
+    display: inline-flex;
+    padding: 5px;
+    border-radius: 999px;
+  }
+
+  .all-toggle-pill {
+    position: absolute;
+    top: 5px;
+    bottom: 5px;
+    left: 0;
+    width: 0;
+    border-radius: 999px;
+    background: var(--violet);
+    box-shadow: 0 6px 20px -8px var(--violet);
+    pointer-events: none;
+  }
+
+  .all-toggle-tab {
+    position: relative;
+    z-index: 1;
+    padding: 0.75rem 1.2rem;
+    border-radius: 999px;
+    font-family: var(--font-display);
+    font-size: 0.74rem;
+    font-weight: 500;
+    letter-spacing: 0.14em;
+    white-space: nowrap;
+    color: var(--muted);
+    transition: color 0.4s ease;
+  }
+  .all-toggle-tab:hover {
+    color: var(--text);
+  }
+  .all-toggle-tab.is-active {
+    color: var(--bg);
+  }
+
+  .projects-empty {
+    padding-block: clamp(3rem, 10vh, 6rem);
+    font-size: clamp(1rem, 1.6vw, 1.3rem);
+    color: var(--taupe-ink);
+  }
+
+  @media (max-width: 479px) {
+    .all-toggle {
+      display: flex;
+    }
+    .all-toggle-tab {
+      flex: 1;
+      justify-content: center;
+      padding: 0.7rem 0.5rem;
+      font-size: 0.64rem;
+      letter-spacing: 0.08em;
+    }
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .menu-btn-icon span,
   .contributor-avatar,
-  .contributor-tip {
+  .contributor-tip,
+  .chip,
+  .chip::before,
+  .logo-img,
+  .xp-marker-dot,
+  .xp-marker-label,
+  .all-toggle-tab,
+  .pill--tech::before,
+  .tech-icon {
     transition: none;
   }
+
 }
 
 /* ==========================================================================

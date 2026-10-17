@@ -17,10 +17,9 @@ const IMAGES = [
 const SAFETY_MS = 9000;
 
 /**
- * Full-screen loader showing real progress: web fonts, images, the hero's 3D
- * chunk + first rendered frame, and Three.js textures (drei useProgress, bridged
- * from inside the lazy scene). It hands straight off to the hero: `ready` flips
- * as the wipe begins, so the hero intro plays underneath it.
+ * Full-screen loader showing real progress: web fonts and images. It hands
+ * straight off to the hero: `ready` flips as the wipe begins, so the hero
+ * intro plays underneath it.
  */
 export default function Loader() {
   const progress = useAppStore((s) => s.progress);

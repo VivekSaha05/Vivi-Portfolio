@@ -1,7 +1,10 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { Fragment, useEffect, useRef, useState } from "react";
+import { Glyph } from "@/components/Icons";
+import LiquidChip from "@/components/LiquidChip";
 import LiquidText from "@/components/LiquidText";
+import LogoBadge from "@/components/LogoBadge";
 import ScrambleText from "@/components/ScrambleText";
 import { experience, projects } from "@/data/portfolio";
 import { useFullMotion, useMediaQuery } from "@/hooks/useMediaQuery";
@@ -116,6 +119,18 @@ export default function Experience() {
             },
           },
         );
+      });
+
+      // Timeline dates light up as their panel reaches the middle of the screen.
+      gsap.utils.toArray<HTMLElement>(".xp-marker").forEach((marker) => {
+        const panel = marker.nextElementSibling as HTMLElement | null;
+        ScrollTrigger.create({
+          trigger: panel ?? marker,
+          containerAnimation: horizontal,
+          start: "center 55%",
+          onEnter: () => marker.classList.add("is-lit"),
+          onLeaveBack: () => marker.classList.remove("is-lit"),
+        });
       });
 
       // 2 — the page turns over.
@@ -238,10 +253,22 @@ export default function Experience() {
             <p className="eyebrow">
               <ScrambleText text={experience.eyebrow} />
             </p>
-            <h2 id="work-title" className="section-title display">
-              <LiquidText text={experience.title} scramble="enter" />{" "}
-              <span className="cursive">{experience.accent}</span>
+            <h2 id="work-title" className="section-title xp-title display">
+              {experience.title.split(" ").map((word, w) => (
+                <Fragment key={word}>
+                  {w > 0 && " "}
+                  <LiquidText text={word} scramble="enter" delay={w * 0.12} />
+                </Fragment>
+              ))}
             </h2>
+            <p className="xp-subline cursive">{experience.subline}</p>
+            <ul className="xp-expertise" aria-label="Expertise">
+              {experience.expertise.map((item) => (
+                <li key={item}>
+                  <LiquidChip>{item}</LiquidChip>
+                </li>
+              ))}
+            </ul>
             <p className="xp-hint" aria-hidden="true">
               <span className="xp-hint-full">scroll or drag</span>
               <span className="xp-hint-lite">keep scrolling</span> ⟶
@@ -249,41 +276,77 @@ export default function Experience() {
           </header>
 
           {experience.roles.map((role, i) => (
-            <article key={role.company} className="xp-panel liquid-glass">
-              <span className="xp-node" aria-hidden="true" />
-              <div className="xp-panel-head" data-speed="0.5">
-                <p className="eyebrow">
-                  {role.period} · {role.meta}
-                </p>
-                <h3 className="xp-company display">
-                  <LiquidText text={role.short} decorative />
-                  <span className="sr-only">{role.company}</span>
-                </h3>
-                <p className="xp-role">
-                  <span aria-hidden="true">{role.company} — </span>
-                  {role.title}
-                </p>
-              </div>
-
-              <ul className="xp-points" data-speed="-0.35">
-                {role.points.map((point) => (
-                  <li key={point}>{point}</li>
-                ))}
-              </ul>
-
-              <ul className="pills xp-stack" data-speed="0.9" aria-label="Focus areas">
-                {role.stack.map((item) => (
-                  <li key={item} className="pill">
-                    {item}
-                  </li>
-                ))}
-              </ul>
-
-              <span className="xp-index display" data-speed="1.7" aria-hidden="true">
-                {String(i + 1).padStart(2, "0")}
+            <Fragment key={role.company}>
+              {/* Sits in the gap before its panel, on the violet line. */}
+              <span className="xp-marker" aria-hidden="true">
+                <span className="xp-marker-dot" />
+                <span className="xp-marker-label">{role.marker}</span>
               </span>
-            </article>
+
+              <article className="xp-panel liquid-glass">
+                <span className="xp-node" aria-hidden="true" />
+                <div className="xp-panel-head" data-speed="0.5">
+                  <LogoBadge sources={role.logos} company={role.company} initials={role.initials} />
+                  <p className="eyebrow">
+                    {role.period} · {role.location}
+                  </p>
+                  <h3 className="xp-company display">
+                    <LiquidText text={role.short} decorative />
+                    <span className="sr-only">{role.company}</span>
+                  </h3>
+                  <p className="xp-role">
+                    <span aria-hidden="true">{role.company} — </span>
+                    {role.title}
+                    {role.team && ` · ${role.team}`}
+                  </p>
+                </div>
+
+                <div className="xp-body" data-speed="-0.35">
+                  {role.summary && (
+                    <>
+                      <h4 className="xp-label">{experience.summaryLabel}</h4>
+                      <p className="xp-summary">{role.summary}</p>
+                      <h4 className="xp-label">{experience.pointsLabel}</h4>
+                    </>
+                  )}
+                  <ul className="xp-points">
+                    {role.points.map((point) => (
+                      <li key={point}>{point}</li>
+                    ))}
+                  </ul>
+                </div>
+
+                <ul className="pills xp-stack" data-speed="0.9" aria-label="Focus areas">
+                  {role.stack.map((item) => (
+                    <li key={item} className="pill">
+                      {item}
+                    </li>
+                  ))}
+                </ul>
+
+                <span className="xp-index display" data-speed="1.7" aria-hidden="true">
+                  {String(i + 1).padStart(2, "0")}
+                </span>
+              </article>
+            </Fragment>
           ))}
+
+          <article className="xp-panel xp-panel--closing liquid-glass" aria-labelledby="xp-closing">
+            <div className="xp-panel-head" data-speed="0.5">
+              <h3 id="xp-closing" className="xp-closing-title display">
+                {experience.closing.title}
+              </h3>
+              <p className="xp-subline cursive">{experience.closing.subline}</p>
+            </div>
+            <ul className="xp-cards" data-speed="-0.35">
+              {experience.closing.cards.map((card) => (
+                <li key={card.text} className="xp-card">
+                  <Glyph name={card.icon} className="xp-card-icon" width={22} height={22} />
+                  <span>{card.text}</span>
+                </li>
+              ))}
+            </ul>
+          </article>
 
           <span className="xp-line" aria-hidden="true" />
         </div>

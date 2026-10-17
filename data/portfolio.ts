@@ -46,7 +46,8 @@ export const socials = {
 
 export const linktree = {
   label: "Linktree",
-  href: "{{LINKTREE_URL}}",
+  handle: "linktr.ee/viveksaha",
+  href: "https://linktr.ee/viveksaha",
 };
 
 export const nav: { id: SectionId; index: string; label: string }[] = [
@@ -77,111 +78,252 @@ export type AboutSegment =
   | { type: "accent"; value: string }
   | { type: "capsule"; src: string; alt: string; position?: string };
 
+/** Icon names understood by components/Icons.tsx `<Glyph />`. */
+export type GlyphName =
+  | "play"
+  | "code"
+  | "badge"
+  | "trophy"
+  | "blocks"
+  | "search"
+  | "team"
+  | "smile";
+
+/**
+ * The About lead: revealed word by word on scroll. The accent is set in the
+ * cursive face. Typed wide so capsule segments stay usable (the loader
+ * preloads any capsule images).
+ */
+const aboutLead: AboutSegment[] = [
+  {
+    type: "text",
+    value: "Software Engineer at Akamai, building React & Next.js interfaces that",
+  },
+  { type: "accent", value: "ship fast" },
+  {
+    type: "text",
+    value:
+      "and hold up under real traffic. Previously scaled admin and storefront platforms at Zopping for 50K+ daily users.",
+  },
+];
+
 export const about = {
-  eyebrow: "02 — about",
+  eyebrow: "// about me",
   title: "ABOUT",
   accent: "with care",
-  paragraph: [
-    { type: "text", value: "I build" },
-    {
-      type: "capsule",
-      src: "/capsules/code.svg",
-      alt: "A code editor showing a React component",
-    },
-    { type: "text", value: "interfaces at Akamai, turning complex systems into" },
-    {
-      type: "capsule",
-      src: "/capsules/ui.svg",
-      alt: "A dashboard interface with cards and a chart",
-    },
-    { type: "text", value: "experiences people" },
-    { type: "accent", value: "enjoy" },
-    { type: "text", value: "using" },
-    {
-      type: "capsule",
-      src: "/vivek.jpg",
-      alt: "Portrait of Vivek Saha",
-      position: "50% 32%",
-    },
-    { type: "text", value: "." },
-  ] satisfies AboutSegment[],
+  /** Small outlined capsules under the title; they stagger in and flood on hover. */
+  tags: [
+    "Frontend Engineer",
+    "React & Next.js",
+    "Scalable Frontend Architecture",
+    "Micro-Frontends",
+    "Performance & Bundle Optimization",
+  ],
+  paragraph: aboutLead,
   portrait: {
     src: "/vivek.jpg",
     alt: "Portrait of Vivek Saha",
     /** Normalised crop of the source photo that the particle portrait samples. */
     crop: { x: 0.24, y: 0, w: 0.52, h: 1 },
   },
+  /** Impact numbers. `value` is what counts up; prefix/suffix decode around it. */
   stats: [
-    { prefix: "", value: 50, suffix: "K+", label: "DAU served" },
-    { prefix: "", value: 35, suffix: "+", label: "features shipped" },
-    { prefix: "", value: 65, suffix: "+", label: "bugs closed" },
-    { prefix: "~", value: 40, suffix: "%", label: "faster MTTR" },
+    { prefix: "15–", value: 20, suffix: "%", label: "faster time-to-interactive" },
+    { prefix: "~", value: 18, suffix: "%", label: "smaller bundle size" },
+    { prefix: "", value: 20, suffix: "%", label: "fewer unnecessary re-renders" },
+    { prefix: "", value: 25, suffix: "%", label: "fewer recurring UI defects" },
+  ],
+  belief: {
+    before: "The best component is the one you ",
+    accent: "don't have to rewrite",
+    after: ".",
+    attribution: "— my one rule of frontend",
+  },
+  factsLabel: "// quick facts",
+  facts: [
+    { label: "origin", value: "Odisha, India" },
+    { label: "based in", value: "Bengaluru" },
+    { label: "languages", value: "Hindi (native) · English (fluent)" },
+    {
+      label: "off-screen",
+      value: "gym & powerlifting · anime · gaming · music · YouTube (tech + travel vlogs)",
+    },
+  ],
+  educationLabel: "// education",
+  education: [
+    { period: "2021 – 2025", title: "B.Tech in CSE", school: "GIET University, Gunupur" },
+    {
+      period: "2019 – 2021",
+      title: "Intermediate",
+      school: "Madnawati Public School, Sambalpur",
+    },
+    {
+      period: "2006 – 2019",
+      title: "Matriculation",
+      school: "Sri Satya Sai Kiddies Abode, Burla",
+    },
+  ],
+  activitiesLabel: "// beyond work",
+  activities: [
+    {
+      icon: "play",
+      label: "Tech + Travel YouTube channel",
+      meta: "2021 – present",
+      href: "{{YOUTUBE_URL}}",
+    },
+    {
+      icon: "code",
+      label: "Core Member, WebEye: Web Development Club, GIETU",
+      meta: "2022 – 2025",
+    },
+    { icon: "badge", label: "5★ Gold Badge, 30 Days of C", meta: "HackerRank" },
+    {
+      icon: "trophy",
+      label: "Winner of multiple college & district powerlifting competitions",
+    },
+  ] satisfies { icon: GlyphName; label: string; meta?: string; href?: string }[],
+  connectLabel: "// let's talk",
+  connect: [
+    { label: "LinkedIn DM", href: socials.linkedin.href },
+    { label: site.email, href: `mailto:${site.email}` },
+    { label: linktree.handle, href: linktree.href },
   ],
 };
 
 export type Role = {
   company: string;
   short: string;
+  /**
+   * Logo files to try, in order. Each one that fails to load falls through to
+   * the next; if none load, a capsule with `initials` is shown instead.
+   */
+  logos: string[];
+  initials: string;
   title: string;
+  team?: string;
   period: string;
-  meta: string;
+  location: string;
+  /** Date shown on the violet timeline beside this panel. */
+  marker: string;
+  /** Optional "Responsibilities" paragraph; `points` then become "Highlights". */
+  summary?: string;
   points: string[];
   stack: string[];
 };
 
 export const experience = {
   eyebrow: "03 — experience",
-  title: "WORK",
-  accent: "shipped",
+  title: "MY EXPERIENCE",
+  subline:
+    "From bug-slaying to feature-wrangling, here's the epic saga of my developer journey so far.",
+  expertise: ["Frontend Development · React & Next.js", "Full-Stack Development · MERN"],
   backdrop: "EXPERIENCE",
+  summaryLabel: "Responsibilities",
+  pointsLabel: "Highlights",
+  /** Newest first: panels run left to right in this order. */
   roles: [
     {
       company: "Akamai Technologies",
       short: "AKAMAI",
+      logos: ["/logos/akamai.svg"],
+      initials: "AK",
       title: "Software Engineer",
+      team: "Cloud Experience Engineering",
       period: "Sep 2026 – Present",
-      meta: "Bengaluru · Remote",
+      location: "Bengaluru (Remote)",
+      marker: "Sep '26",
       points: [
-        "Cloud Experience Engineering team building and evolving Akamai Cloud (formerly Linode)",
+        "Part of the team building and evolving Akamai Cloud (formerly Linode)",
         "Cloud application migration and re-platforming frontend workloads onto Akamai Cloud infrastructure",
-        "Building cloud-facing apps with React, Next.js, TypeScript; edge computing and cloud architecture",
-        "Cross-functional work with backend/infra teams through the Linode → Akamai Cloud transition",
+        "Building cloud-facing applications with React, Next.js, JavaScript, and TypeScript; contributing to cloud architecture and edge computing capabilities",
+        "Collaborating with backend and infrastructure teams on reliability and consistent UX through the Linode → Akamai Cloud transition",
       ],
       stack: ["React", "Next.js", "TypeScript", "Edge", "Cloud"],
     },
     {
-      company: "Zopsmart Technology (Zopping)",
+      company: "Zopping",
       short: "ZOPPING",
-      title: "SDE-1",
-      period: "Dec 2024 – May 2026",
-      meta: "Intern → SDE-1",
+      logos: ["/logos/zopping.svg"],
+      initials: "ZP",
+      title: "SDE 1 (Frontend)",
+      period: "Sep 2025 – May 2026",
+      location: "Bengaluru, KA",
+      marker: "May '25",
+      summary:
+        "Worked on the Zopping admin dashboard and the consumer (storefront) team, contributing bug fixes, enhancements, and new features.",
       points: [
-        "20+ reusable React components for Admin and Storefront platforms serving 50,000+ DAU",
-        "20+ REST APIs designed end-to-end with the backend team; production defects cut by 30%",
-        "RCA via Grafana logs: recurring UI defects down 25%, MTTR down ~40%",
-        "35+ features shipped, 65+ bugs closed, <0.5% post-release defect rate",
-        "Re-renders down 20%, TTI down 15–20%, bundle size down ~18%, dev env Dockerised",
+        "Built and maintained 20+ reusable React components for Admin and Storefront, serving 50,000+ daily active users",
+        "Designed 20+ REST API contracts end-to-end with backend; unit and regression testing cut production defects by 30%",
+        "Grafana-based RCA reduced recurring UI defects by 25% and mean time to resolution by ~40%",
+        "Shipped 35+ features and closed 65+ bugs with a <0.5% post-release defect rate",
+        "Cut re-renders by 20%, TTI by 15–20%, and bundle size by ~18%; Dockerised the dev environment",
+        "Collaborated cross-functionally to deliver seamless experiences across multiple modules",
       ],
       stack: ["React", "REST", "Grafana", "Docker", "Performance"],
     },
+    {
+      company: "ZopSmart",
+      short: "ZOPSMART",
+      logos: ["/logos/zopsmart.svg", "/logos/zopping.svg"],
+      initials: "ZS",
+      title: "SDE Intern (Frontend)",
+      period: "Dec 2024 – Feb 2025",
+      location: "Bengaluru, KA",
+      marker: "Dec '24",
+      summary:
+        "Contributed to the Zopping admin dashboard, focusing on bug fixes, minor enhancements, and learning best practices in large-scale frontend systems.",
+      points: [
+        "Adapted quickly to the team's workflow, tools, and codebase",
+        "Built 8+ reusable UI components and integrated 5+ REST APIs, reducing component duplication by ~30% and data-sync errors by ~20%",
+        "Gained hands-on experience with production-scale React/Next.js applications under mentorship",
+      ],
+      stack: ["React", "Next.js", "REST"],
+    },
   ] satisfies Role[],
+  closing: {
+    title: "What I bring on board",
+    subline: "Skills, sarcasm, and clean code, mostly in that order.",
+    cards: [
+      { icon: "blocks", text: "Build smart, clean, and scalable solutions" },
+      { icon: "search", text: "Debug like a detective (with better coffee)" },
+      { icon: "team", text: "Team up, level up, and keep the vibe fun" },
+      {
+        icon: "smile",
+        text: "Always ready to debug, and maybe crack a few jokes in the process",
+      },
+    ] satisfies { icon: GlyphName; text: string }[],
+  },
 };
 
 export type Contributor = { name: string; avatar: string; linkedin: string };
 
+export type ProjectCategory = "professional" | "personal";
+
+/**
+ * Not yet assigned. Allowed so the site keeps building while you sort the
+ * projects, but an unassigned project is listed under neither tab on
+ * /projects. Replace it with "professional" or "personal".
+ */
+type UnassignedCategory = "{{professional|personal}}";
+
 export type Project = {
   slug: string;
   title: string;
+  /** `{{…}}` hides the date. */
   date: string;
+  /** `{{…}}` entries are left out. */
   stack: string[];
   description: string;
   image: string;
   imageAlt: string;
+  /** `{{…}}` hides the GitHub button. */
   githubUrl: string;
   /** Leave out (or empty) to hide the "Live" button. */
   liveUrl?: string;
   contributors?: Contributor[];
-  /** Featured projects are the ones shown on the home page. */
+  /** Required: which tab it is listed under on /projects. */
+  category: ProjectCategory | UnassignedCategory;
+  /** Featured projects are the ones shown on the home page, whatever their category. */
   featured?: boolean;
 };
 
@@ -191,6 +333,12 @@ export const projects = {
   accent: "crafted",
   viewAll: "VIEW ALL PROJECTS →",
   allTitle: "ALL PROJECTS",
+  /** Tabs on /projects, in order. The first one is the default. */
+  categories: [
+    { id: "professional", label: "PROFESSIONAL" },
+    { id: "personal", label: "PERSONAL" },
+  ] satisfies { id: ProjectCategory; label: string }[],
+  empty: "// shipping soon",
   items: [
     {
       slug: "healthcare-saas",
@@ -204,6 +352,7 @@ export const projects = {
         "Abstract interface of the HealthCare SaaS booking flow: a three-step stepper, a calendar and doctor cards",
       githubUrl: socials.github.href,
       liveUrl: "",
+      category: "{{professional|personal}}",
       featured: true,
     },
     {
@@ -226,7 +375,34 @@ export const projects = {
           linkedin: "{{CONTRIBUTOR_LINKEDIN_URL}}",
         },
       ],
+      category: "{{professional|personal}}",
       featured: true,
+    },
+    {
+      slug: "shrujan",
+      title: "Shrujan 2.0",
+      date: "{{DATE}}",
+      stack: ["{{STACK}}"],
+      description: "University fest platform serving 6,000+ users with zero downtime.",
+      image: "/projects/shrujan.svg",
+      imageAlt:
+        "Abstract interface of the Shrujan 2.0 fest platform: an event schedule, a countdown and a live attendee counter",
+      githubUrl: "{{URL}}",
+      liveUrl: "{{URL}}",
+      category: "{{professional|personal}}",
+    },
+    {
+      slug: "projectswithmani",
+      title: "ProjectsWithMani",
+      date: "{{DATE}}",
+      stack: ["{{STACK}}"],
+      description: "E-commerce platform built for a YouTube creator.",
+      image: "/projects/projectswithmani.svg",
+      imageAlt:
+        "Abstract interface of the ProjectsWithMani storefront: a product grid, a video banner and a cart",
+      githubUrl: "{{URL}}",
+      liveUrl: "{{URL}}",
+      category: "{{professional|personal}}",
     },
   ] satisfies Project[],
 };
@@ -248,17 +424,13 @@ export const stack = {
     {
       label: "// frontend + backend",
       items: [
-        "React.js",
-        "Next.js",
-        "TypeScript",
-        "JavaScript (ES6+)",
-        "Redux",
+        "Next.js (TypeScript)",
+        "JavaScript ES6+ (React.js)",
+        "Redux Toolkit",
         "Tailwind CSS",
         "HTML5",
         "CSS3",
-        "Node.js",
-        "Express.js",
-        "REST APIs",
+        "Node.js + Express (REST APIs)",
         "JWT",
         "OAuth",
       ],
@@ -266,13 +438,13 @@ export const stack = {
     {
       label: "// db · testing · tools",
       items: [
-        "PostgreSQL",
-        "MySQL",
         "MongoDB",
-        "Firebase",
+        "MySQL",
+        "PostgreSQL",
+        "Firebase (Auth & Firestore)",
         "Jest",
-        "Vitest",
         "React Testing Library",
+        "Vitest",
         "LaunchDarkly",
         "Git",
         "GitHub",
@@ -282,10 +454,6 @@ export const stack = {
         "Jira",
         "Vercel",
         "Netlify",
-        "SSR",
-        "SSG",
-        "Code Splitting",
-        "Edge Computing",
       ],
     },
   ],
